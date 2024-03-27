@@ -1,0 +1,99 @@
+import json
+import os
+import pandas as pd
+from tqdm import tqdm
+from transformers import PreTrainedTokenizerBase
+
+from config import Config
+
+
+def filter_data(c: Config):
+    # TODO separate settings for MLM dataset
+    config_hash = str(hash((_ for _ in [c.sample_size])))
+
+    products_filename = "products.jsonl"
+    filtered_products_filename = "products_filtered.jsonl"
+
+    data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
+    ciqual_path = os.path.join(data_dir, "ciqual.csv")
+    products_path = os.path.join(data_dir, products_filename)
+    output_path = os.path.join(data_dir, config_hash)
+    if not os.path.exists(output_path):
+        os.makedirs(output_path, exist_ok=True)
+    filtered_products_path = os.path.join(output_path, filtered_products_filename)
+    if c.cache_data and os.path.exists(filtered_products_path):
+        return filtered_products_path
+
+    ciqual_data = pd.read_csv(ciqual_path)
+    ciqual_to_agb = {
+        str(c): str(a) for c, a in zip(ciqual_data["Code CIQUAL"], ciqual_data["Code AGB"])
+    }
+    agb_set = set(ciqual_data["Code AGB"])
+    del ciqual_data
+
+    columns = [
+        "product_name",
+        "lang",
+        # "ecoscore_grade",
+        # "ecoscore_tags",
+        # "ecoscore_data",
+        # "ciqual_food_name_tags",
+        # "categories_old",
+        # "category_properties",
+        "categories_properties"
+    ]
+
+    i = 0
+    language_counts = {}
+    labelled_language_counts = {}
+    labelled_class_counts = {}
+    with open(products_path) as f, open(filtered_products_path, 'w') as out_file:
+        for line in tqdm(f):
+            point = json.loads(line)
+
+            language_counts[point.get("lang")] = language_counts.get(point.get("lang"), 0) + 1
+
+            if "categories_properties" in point:
+                categories = point.pop("categories_properties")
+                if categories.get("agribalyse_food_code:en") in agb_set:
+                    label = categories.get("agribalyse_food_code:en")
+                elif categories.get("ciqual_food_code:en") in ciqual_to_agb:
+                    # TODO investigate why this happens
+                    label = ciqual_to_agb[categories.get("ciqual_food_code:en")]
+                elif categories.get("agribalyse_proxy_food_code:en") in agb_set:
+                    label = categories.get("agribalyse_proxy_food_code:en")
+                else:
+                    continue
+
+                labelled_language_counts[point.get("lang")] = labelled_language_counts.get(point.get("lang"), 0) + 1
+                labelled_class_counts[label] = labelled_class_counts.get(label, 0) + 1
+
+                filtered_entry = {c: point.get(c) for c in columns}
+                filtered_entry["label"] = label
+                out_file.write(json.dumps(filtered_entry))
+                out_file.write('\n')
+                i += 1
+                if c.sample_size and i > c.sample_size:
+                    break
+
+    if c.data_analysis:
+        # TODO make histogram
+        footprint_scores = pd.read_csv(ciqual_path)["Score unique EF"]
+
+    return filtered_products_path
+
+
+def prepare_inputs(sample: dict, tokenizer: PreTrainedTokenizerBase, tokenizer_kwargs: dict,
+                   class_to_idx: dict, class_to_co2e: dict) -> dict:
+    # TODO plural keys are a bit misleading here - singular is simplified and therefore preferred
+    sample["encodings"] = tokenizer(sample.pop('product_name'), **tokenizer_kwargs)
+    sample['regressands'] = class_to_co2e[sample['label']]
+    sample['classes'] = class_to_idx[sample['label']]
+    return sample
+
+
+def get_ciqual_data():
+    # TODO deduplicate this with other CIQUAL loading logic
+    data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
+    ciqual_path = os.path.join(data_dir, "ciqual.csv")
+    return pd.read_csv(ciqual_path)
