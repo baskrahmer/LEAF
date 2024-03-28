@@ -19,21 +19,11 @@ def train(c: Config, data_path: str, model, mlm: bool = False) -> PreTrainedMode
     # TODO add correct model typing hint and integrate this argument
     seed_everything(c.seed, workers=True)
 
-    if c.debug:
-        c.train_steps = 10
-        c.val_steps = 5
-        c.accumulate_grad_batches = 1
-        c.num_workers = 0
-
     tokenizer, tokenizer_kwargs = get_tokenizer(c)
     dataset = get_dataset(data_path, c.test_size)
 
     train_ds = dataset["train"]  # TODO train_test_split
     val_ds = dataset["test"]
-
-    if c.debug:  # TODO add debug statement earlier on
-        train_ds = train_ds.select(range(128))
-        val_ds = val_ds.select(range(128))
 
     # TODO sort this by ascending label alphabetically
     # TODO refactor to get_mappings type of function or something, or get_map_fn function
