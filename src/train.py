@@ -16,7 +16,7 @@ def get_dataset(data_path: str, test_size: float) -> DatasetDict:
     return load_dataset("json", data_files=data_path)["train"].train_test_split(test_size=test_size)
 
 
-def train(c: Config, data_path: str, model: Optional[PreTrainedModel], mlm: bool = False) -> PreTrainedModel:
+def train(c: Config, data_path: str, base_model: Optional[PreTrainedModel], mlm: bool = False) -> PreTrainedModel:
     seed_everything(c.seed, workers=True)
 
     tokenizer, tokenizer_kwargs = get_tokenizer(c)
@@ -42,7 +42,7 @@ def train(c: Config, data_path: str, model: Optional[PreTrainedModel], mlm: bool
         base_model = AutoModelForMaskedLM.from_pretrained(c.model_name)
     else:
         base_model = LEAFModel(c, num_classes=len(class_to_idx.keys()), base_model=model)
-    model = LightningWrapper(c, tokenizer, model=base_model, num_classes=len(class_to_idx.keys()), mlm=mlm)
+    lightning_model = LightningWrapper(c, tokenizer, model=base_model, num_classes=len(class_to_idx.keys()), mlm=mlm)
 
     trainer = Trainer(
         accelerator="auto" if (torch.cuda.is_available() and c.use_gpu) else "cpu",
@@ -60,7 +60,7 @@ def train(c: Config, data_path: str, model: Optional[PreTrainedModel], mlm: bool
     )
 
     trainer.fit(
-        model=model,
+        model=lightning_model,
         train_dataloaders=train_dataloader,
         val_dataloaders=val_dataloader,
     )
@@ -69,14 +69,15 @@ def train(c: Config, data_path: str, model: Optional[PreTrainedModel], mlm: bool
         dataloaders=val_dataloader,
         ckpt_path='best',
     )
+    del lightning_model
 
     if c.save_path:
-        # TODO use pytorch saving mechanism
-        model.model.save_pretrained(c.save_path)
+        with open(c.save_path + "model.pt", "wb") as f:
+            torch.save(base_model.state_dict(), f)
         tokenizer.save_pretrained(c.save_path)
 
     if c.push_to_hub:
-        model.model.push_to_hub(c.hub_repo_id)
+        base_model.push_to_hub(c.hub_repo_id)
         tokenizer.push_to_hub(c.hub_repo_id)
 
-    return model.model
+    return base_model

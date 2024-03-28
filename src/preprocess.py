@@ -82,7 +82,6 @@ def filter_data(c: Config, mlm: bool = False) -> str:
 
 def prepare_inputs(sample: dict, tokenizer: PreTrainedTokenizerBase, tokenizer_kwargs: dict,
                    class_to_idx: dict, class_to_co2e: dict) -> dict:
-    # TODO plural keys are a bit misleading here - singular is simplified and therefore preferred
     sample['encodings'] = tokenizer(sample.pop('product_name'), **tokenizer_kwargs)
     sample['regressands'] = class_to_co2e[sample['label']]
     sample['classes'] = class_to_idx[sample['label']]

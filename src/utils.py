@@ -3,6 +3,7 @@ import torch
 from lightning import pytorch as pl
 from lightning.pytorch.loggers import CSVLogger, WandbLogger
 from transformers import PreTrainedTokenizerBase, DataCollatorWithPadding
+from typing import Any
 from typing import List
 
 from src.config import Config
@@ -39,7 +40,7 @@ def get_callbacks(c: Config) -> List[pl.callbacks.Callback]:
 def get_collate_fn(tokenizer: PreTrainedTokenizerBase):
     collator = DataCollatorWithPadding(tokenizer=tokenizer, return_tensors='pt', padding=True)
 
-    def collate_fn(batch: List) -> dict:
+    def collate_fn(batch: List[dict[str, Any]]) -> dict[str, Any]:
         encodings = collator([_["encodings"] for _ in batch])
         return_dict = {
             "input_ids": encodings.data["input_ids"],
