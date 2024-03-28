@@ -3,8 +3,9 @@ import torch
 from torch import nn
 from torchmetrics import Accuracy, F1Score, MeanAbsoluteError, MeanSquaredError
 from torchmetrics.text import Perplexity
-from transformers import PreTrainedTokenizerBase, AutoModel, get_linear_schedule_with_warmup, AutoTokenizer
-from typing import Tuple, List
+from transformers import AutoTokenizer, AutoModel, get_linear_schedule_with_warmup
+from transformers import PreTrainedTokenizerBase, PreTrainedModel
+from typing import Tuple, List, Optional
 
 from src.config import Config
 
@@ -69,7 +70,7 @@ class HybridHead(nn.Module):
 
 class LEAFModel(nn.Module):
 
-    def __init__(self, c, num_classes: int, base_model=None):
+    def __init__(self, c, num_classes: int, base_model: Optional[PreTrainedModel] = None):
         super().__init__()
         if base_model is not None:
             self.base_model = base_model

@@ -4,6 +4,7 @@ from datasets import load_dataset
 from lightning import Trainer, seed_everything
 from torch.utils.data import DataLoader
 from transformers import PreTrainedModel, AutoModelForMaskedLM
+from typing import Optional
 
 from config import Config
 from src.model import LightningWrapper, LEAFModel, get_tokenizer
@@ -15,14 +16,13 @@ def get_dataset(data_path: str, test_size: float) -> DatasetDict:
     return load_dataset("json", data_files=data_path).train_test_split(test_size=test_size)
 
 
-def train(c: Config, data_path: str, model, mlm: bool = False) -> PreTrainedModel:
-    # TODO add correct model typing hint and integrate this argument
+def train(c: Config, data_path: str, model: Optional[PreTrainedModel], mlm: bool = False) -> PreTrainedModel:
     seed_everything(c.seed, workers=True)
 
     tokenizer, tokenizer_kwargs = get_tokenizer(c)
     dataset = get_dataset(data_path, c.test_size)
 
-    train_ds = dataset["train"]  # TODO train_test_split
+    train_ds = dataset["train"]
     val_ds = dataset["test"]
 
     # TODO sort this by ascending label alphabetically
