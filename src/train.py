@@ -8,8 +8,8 @@ from typing import Optional
 
 from config import Config
 from src.model import LightningWrapper, LEAFModel, get_tokenizer
-from src.preprocess import prepare_inputs, get_ciqual_data
-from src.utils import get_loggers, get_callbacks, get_collate_fn
+from src.preprocess import prepare_inputs
+from src.utils import get_loggers, get_callbacks, get_collate_fn, get_class_mapping, get_ciqual_mapping
 
 
 def get_dataset(data_path: str, test_size: float) -> DatasetDict:
@@ -25,13 +25,8 @@ def train(c: Config, data_path: str, model: Optional[PreTrainedModel], mlm: bool
     train_ds = dataset["train"]
     val_ds = dataset["test"]
 
-    # TODO sort this by ascending label alphabetically
-    # TODO refactor to get_mappings type of function or something, or get_map_fn function
-    class_to_idx = {c: i for i, c in enumerate(set(train_ds['label'] + val_ds['label']))}
-    idx_to_class = {i: c for c, i in class_to_idx.items()}
-    ciqual_data = get_ciqual_data()
-    class_to_co2e = {str(c): co2 for c, co2 in zip(ciqual_data["Code AGB"], ciqual_data["Score unique EF"])}  # TODO
-    del ciqual_data
+    class_to_idx = get_class_mapping(train_ds, val_ds)
+    class_to_co2e = get_ciqual_mapping()
 
     map_fn = lambda x: prepare_inputs(x, tokenizer, tokenizer_kwargs, class_to_idx, class_to_co2e)
     train_ds = train_ds.map(map_fn, num_proc=max(c.num_workers, 1))

@@ -6,6 +6,7 @@ from transformers import PreTrainedTokenizerBase, DataCollatorWithPadding
 from typing import List
 
 from src.config import Config
+from src.preprocess import get_ciqual_data
 
 
 def get_loggers(c: Config):
@@ -52,3 +53,15 @@ def get_collate_fn(tokenizer: PreTrainedTokenizerBase):
         return return_dict
 
     return collate_fn
+
+
+def get_class_mapping(train_ds, val_ds):
+    all_labels = sorted(set(train_ds['label'] + val_ds['label']))
+    class_to_idx = {c: i for i, c in enumerate(all_labels)}
+    return class_to_idx
+
+
+def get_ciqual_mapping():
+    ciqual_data = get_ciqual_data()
+    class_to_co2e = {str(c): co2 for c, co2 in zip(ciqual_data["Code AGB"], ciqual_data["Score unique EF"])}  # TODO
+    return class_to_co2e
