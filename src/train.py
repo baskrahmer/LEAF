@@ -13,7 +13,7 @@ from src.utils import get_loggers, get_callbacks, get_collate_fn
 
 
 def get_dataset(data_path: str, test_size: float) -> DatasetDict:
-    return load_dataset("json", data_files=data_path).train_test_split(test_size=test_size)
+    return load_dataset("json", data_files=data_path)["train"].train_test_split(test_size=test_size)
 
 
 def train(c: Config, data_path: str, model: Optional[PreTrainedModel], mlm: bool = False) -> PreTrainedModel:
