@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 from transformers import PreTrainedModel, AutoModelForMaskedLM
 from typing import Optional
 
-from config import Config
+from src.config import Config
 from src.model import LightningWrapper, LEAFModel, get_tokenizer
 from src.preprocess import prepare_inputs
 from src.utils import get_loggers, get_callbacks, get_collate_fn, get_class_mapping, get_ciqual_mapping
@@ -41,7 +41,7 @@ def train(c: Config, data_path: str, base_model: Optional[PreTrainedModel], mlm:
     if mlm:
         base_model = AutoModelForMaskedLM.from_pretrained(c.model_name)
     else:
-        base_model = LEAFModel(c, num_classes=len(class_to_idx.keys()), base_model=model)
+        base_model = LEAFModel(c, num_classes=len(class_to_idx.keys()), base_model=base_model)
     lightning_model = LightningWrapper(c, tokenizer, model=base_model, num_classes=len(class_to_idx.keys()), mlm=mlm)
 
     trainer = Trainer(

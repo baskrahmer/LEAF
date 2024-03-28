@@ -1,18 +1,31 @@
-# TODO create test_dataset with small sample size
-# TODO implement tests
+import copy
+
+from src.config import Config
+from src.main import main
+
+dummy_config = Config()
 
 
 def test_train_classification():
-    raise NotImplementedError
+    c = copy.deepcopy(dummy_config)
+    c.objective = "classification"
+    main(c)
 
 
 def test_train_regression():
-    raise NotImplementedError
+    c = copy.deepcopy(dummy_config)
+    c.objective = "regression"
+    main(c)
 
 
 def test_train_hybrid():
-    raise NotImplementedError
+    c = copy.deepcopy(dummy_config)
+    c.objective = "hybrid"
+    main(c)
 
 
 def test_train_mlm():
-    raise NotImplementedError
+    c = copy.deepcopy(dummy_config)
+    c.mlm_train_steps = 10
+    c.mlm_val_steps = 5
+    main(c)

@@ -1,8 +1,8 @@
 import tempfile
 
-from config import Config
-from preprocess import filter_data
-from train import train
+from src.config import Config
+from src.preprocess import filter_data
+from src.train import train
 
 
 def main(c: Config):

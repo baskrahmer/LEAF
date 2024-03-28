@@ -4,7 +4,7 @@ import pandas as pd
 from tqdm import tqdm
 from transformers import PreTrainedTokenizerBase
 
-from config import Config
+from src.config import Config
 
 
 def filter_data(c: Config, mlm: bool = False) -> str:
