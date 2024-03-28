@@ -5,7 +5,7 @@ from preprocess import filter_data
 from train import train
 
 
-def main():
+def main(c: Config):
     if c.mlm_train_steps:
         data_path = filter_data(c, mlm=True)
         model = train(c, data_path=data_path, base_model=None, mlm=True) if c.mlm_train_steps else None
@@ -18,7 +18,7 @@ if __name__ == "__main__":
     c = Config()
 
     if not c.debug:
-        main()
+        main(c)
 
     else:
         c.train_steps = 10
@@ -30,4 +30,4 @@ if __name__ == "__main__":
 
         with tempfile.TemporaryDirectory() as tmpdirname:
             c.save_path = tmpdirname
-            main()
+            main(c)
