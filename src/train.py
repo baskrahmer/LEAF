@@ -11,8 +11,8 @@ from src.preprocess import prepare_inputs, get_ciqual_data
 from src.utils import get_loggers, get_callbacks, get_collate_fn
 
 
-def get_dataset(data_path: str) -> DatasetDict:
-    return load_dataset("json", data_files=data_path)
+def get_dataset(data_path: str, test_size: float) -> DatasetDict:
+    return load_dataset("json", data_files=data_path).train_test_split(test_size=test_size)
 
 
 def train(c: Config, data_path: str, model, mlm: bool = False) -> PreTrainedModel:
@@ -26,10 +26,10 @@ def train(c: Config, data_path: str, model, mlm: bool = False) -> PreTrainedMode
         c.num_workers = 0
 
     tokenizer, tokenizer_kwargs = get_tokenizer(c)
-    dataset = get_dataset(data_path)
+    dataset = get_dataset(data_path, c.test_size)
 
     train_ds = dataset["train"]  # TODO train_test_split
-    val_ds = dataset["train"]
+    val_ds = dataset["test"]
 
     if c.debug:  # TODO add debug statement earlier on
         train_ds = train_ds.select(range(128))

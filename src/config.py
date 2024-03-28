@@ -13,6 +13,7 @@ class Config:
 
     # Data settings
     sample_size: int = 100
+    test_size: float = 0.2
     cache_data: bool = True
     data_analysis: bool = False
 
