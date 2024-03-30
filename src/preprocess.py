@@ -39,9 +39,9 @@ def filter_data(c: Config, mlm: bool = False) -> str:
     with open(products_path) as f, open(filtered_products_path, 'w') as out_file:
         for line in tqdm(f):
             product = json.loads(line)
+
             if mlm:
                 filtered_entry = {c: product.get(c) for c in columns}
-                filtered_entry["label"] = label
                 out_file.write(json.dumps(filtered_entry))
                 out_file.write('\n')
 
@@ -67,7 +67,8 @@ def filter_data(c: Config, mlm: bool = False) -> str:
 
             lang = product.get("lang")
             lang_frequencies[lang] = lang_frequencies.get(lang, 0) + 1
-            label_frequencies[label] = label_frequencies.get(label, 0) + 1
+            if not mlm:
+                label_frequencies[label] = label_frequencies.get(label, 0) + 1
 
             i += 1
             if c.sample_size and i > c.sample_size:
@@ -78,6 +79,14 @@ def filter_data(c: Config, mlm: bool = False) -> str:
         footprint_scores = pd.read_csv(ciqual_path)["Score unique EF"]
 
     return filtered_products_path
+
+
+def prepare_inputs_mlm(sample: dict, tokenizer: PreTrainedTokenizerBase, tokenizer_kwargs: dict) -> dict:
+    encodings = tokenizer(sample.pop('product_name'), **tokenizer_kwargs)
+    sample['input_ids'] = encodings.input_ids
+    sample['attention_mask'] = encodings.attention_mask
+    sample.pop('lang')  # TODO make this work with collator so we dont have to pop
+    return sample
 
 
 def prepare_inputs(sample: dict, tokenizer: PreTrainedTokenizerBase, tokenizer_kwargs: dict,

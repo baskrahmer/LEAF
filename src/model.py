@@ -72,10 +72,15 @@ class LEAFModel(nn.Module):
 
     def __init__(self, c, num_classes: int, base_model: Optional[PreTrainedModel] = None):
         super().__init__()
+        self.base_model = AutoModel.from_pretrained(c.model_name)
+
+        # Transfer pretrained model weights to the new model
         if base_model is not None:
-            self.base_model = base_model
-        else:
-            self.base_model = AutoModel.from_pretrained(c.model_name)
+            transfer_weights = {k.replace("bert.", ""): v for k, v in base_model.state_dict().items()}
+            result = self.base_model.load_state_dict(transfer_weights, strict=False)
+            if len(result.unexpected_keys) == len(base_model.state_dict()):
+                raise ValueError("No weights were transferred from the base model to the new model.")
+
         hidden_dim = self.base_model.config.hidden_size
         if c.objective == "classification":
             self.head = ClassificationHead(hidden_dim=hidden_dim, num_classes=num_classes)
@@ -140,6 +145,9 @@ class LightningWrapper(lightning.LightningModule):
         for metric_key, metric in metrics.items():
             if metric_key.endswith("f1") or metric_key.endswith("accuracy"):
                 value = metric(preds=outputs["logits"], target=batch['classes'])
+            elif metric_key.endswith("perplexity"):
+                # TODO is the token offset correct here?
+                value = metric(preds=outputs["logits"], target=batch.data["input_ids"])
             else:
                 # TODO this unsqueezing is perhaps cleaner when applied during collation
                 value = metric(preds=outputs["predicted_values"], target=batch['regressands'].unsqueeze(-1))
@@ -179,7 +187,7 @@ class LightningWrapper(lightning.LightningModule):
         self.clear_metrics(self.test_metrics)
 
     def forward(self, batch: dict) -> dict:
-        return self.model(**{k: v for k, v in batch.items()})  # TODO fix this for MLM
+        return self.model(**{k: v for k, v in batch.items()})
 
     def configure_optimizers(self) -> Tuple[List[torch.optim.Optimizer], List[dict]]:
         optimizer = torch.optim.AdamW(

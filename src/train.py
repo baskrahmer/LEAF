@@ -3,12 +3,12 @@ from datasets import DatasetDict
 from datasets import load_dataset
 from lightning import Trainer, seed_everything
 from torch.utils.data import DataLoader
-from transformers import PreTrainedModel, AutoModelForMaskedLM
+from transformers import PreTrainedModel, AutoModelForMaskedLM, DataCollatorForLanguageModeling
 from typing import Optional
 
 from src.config import Config
 from src.model import LightningWrapper, LEAFModel, get_tokenizer
-from src.preprocess import prepare_inputs
+from src.preprocess import prepare_inputs, prepare_inputs_mlm
 from src.utils import get_loggers, get_callbacks, get_collate_fn, get_class_mapping, get_ciqual_mapping
 
 
@@ -25,14 +25,17 @@ def train(c: Config, data_path: str, base_model: Optional[PreTrainedModel], mlm:
     train_ds = dataset["train"]
     val_ds = dataset["test"]
 
-    class_to_idx = get_class_mapping(train_ds, val_ds)
-    class_to_co2e = get_ciqual_mapping()
-
-    map_fn = lambda x: prepare_inputs(x, tokenizer, tokenizer_kwargs, class_to_idx, class_to_co2e)
+    if mlm:
+        map_fn = lambda x: prepare_inputs_mlm(x, tokenizer, tokenizer_kwargs)
+        collate_fn = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm_probability=c.mlm_probability)
+        class_to_idx = {}
+    else:
+        class_to_idx = get_class_mapping(train_ds, val_ds)
+        class_to_co2e = get_ciqual_mapping()
+        map_fn = lambda x: prepare_inputs(x, tokenizer, tokenizer_kwargs, class_to_idx, class_to_co2e)
+        collate_fn = get_collate_fn(tokenizer)
     train_ds = train_ds.map(map_fn, num_proc=max(c.num_workers, 1))
     val_ds = val_ds.map(map_fn, num_proc=max(c.num_workers, 1))
-
-    collate_fn = get_collate_fn(tokenizer)
 
     dl_kwargs = {"collate_fn": collate_fn, "num_workers": c.num_workers}
     train_dataloader = DataLoader(train_ds, shuffle=True, batch_size=c.train_batch_size, **dl_kwargs)
@@ -72,7 +75,7 @@ def train(c: Config, data_path: str, base_model: Optional[PreTrainedModel], mlm:
     del lightning_model
 
     if c.save_path:
-        with open(c.save_path + "model.pt", "wb") as f:
+        with open(c.save_path + f"model{'_mlm' if mlm else ''}.pt", "wb") as f:
             torch.save(base_model.state_dict(), f)
         tokenizer.save_pretrained(c.save_path)
 

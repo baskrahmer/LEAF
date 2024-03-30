@@ -33,6 +33,7 @@ class Config:
     mlm_train_steps: int = 0
     mlm_val_steps: int = 5
     mlm_learning_rate: float = 1e-5
+    mlm_probability: float = 0.15
 
     # Objective training settings
     train_steps: int = 10
