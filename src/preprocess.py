@@ -10,11 +10,10 @@ from src.config import Config
 def filter_data(c: Config, mlm: bool = False) -> str:
     config_hash = str(hash((_ for _ in [c.sample_size, c.test_size])))
 
-    products_filename = "products.jsonl"
     filtered_products_filename = "products_filtered.jsonl" if not mlm else "products_mlm.jsonl"
     data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
-    ciqual_path = os.path.join(data_dir, "ciqual.csv")
-    products_path = os.path.join(data_dir, products_filename)
+    ciqual_path = os.path.join(data_dir, c.ciqual_filename)
+    products_path = os.path.join(data_dir, c.products_filename)
     output_path = os.path.join(data_dir, config_hash)
 
     if not os.path.exists(output_path):
