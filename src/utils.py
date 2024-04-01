@@ -48,9 +48,9 @@ def get_collate_fn(tokenizer: PreTrainedTokenizerBase):
             "lang": [_["lang"] for _ in batch]
         }
         if "classes" in batch[0]:
-            return_dict["classes"] = torch.tensor([_["classes"] for _ in batch])  # TODO set dtype
+            return_dict["classes"] = torch.tensor([_["classes"] for _ in batch])
         if "regressands" in batch[0]:
-            return_dict["regressands"] = torch.tensor([_["regressands"] for _ in batch])  # TODO set dtype
+            return_dict["regressands"] = torch.tensor([_["regressands"] for _ in batch])
         return return_dict
 
     return collate_fn
