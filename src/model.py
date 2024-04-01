@@ -11,7 +11,9 @@ from src.config import Config
 
 
 class RegressionHead(nn.Module):
-    # TODO
+    """
+    Model head to predict a continuous, non-negative target variable.
+    """
 
     def __init__(self, hidden_dim):
         super().__init__()
@@ -29,7 +31,9 @@ class RegressionHead(nn.Module):
 
 
 class ClassificationHead(nn.Module):
-    # TODO
+    """
+    Model head to predict a categorical target variable.
+    """
 
     def __init__(self, hidden_dim: int, num_classes: int):
         super().__init__()
@@ -46,6 +50,9 @@ class ClassificationHead(nn.Module):
 
 
 class HybridHead(nn.Module):
+    """
+    Hybrid model head with predictions based on both categorical and continuous target variables.
+    """
     # TODO this one should have a class_idx_to_co2e mapping
     # TODO Essentially the probability distribution would linearly map to a constant and summed together to give a value. It is questionable whether such a linear mapping brings any signal, since it is essentially a linear combination of the logits which could also be learned. A weighted combination of the different training signals is however a different story.
 
