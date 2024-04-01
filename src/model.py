@@ -15,12 +15,12 @@ class RegressionHead(nn.Module):
 
     def __init__(self, hidden_dim):
         super().__init__()
-        # TODO set an activation on top of this linear layer, e.g. some long-tail exponential
         self.linear = nn.Linear(in_features=hidden_dim, out_features=1)
+        self.activation = nn.Softplus()
         self.loss = nn.MSELoss()
 
     def __call__(self, activations, regressands, **kwargs):
-        predicted_values = self.linear(activations)  # TODO is logits an appropriate name for regression problems?
+        predicted_values = self.activation(self.linear(activations))
         loss = self.loss(predicted_values, regressands)
         return {
             "predicted_values": predicted_values,
