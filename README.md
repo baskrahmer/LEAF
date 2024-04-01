@@ -2,30 +2,31 @@
 
 ### TODO
 
-- [ ] Data loading
-    - [ ] Ciqual data
-        - [ ] Extract Co2e from data
-    - [ ] OpenFoodFacts data
-        - [ ] Filter data with known CIQUAL class
-    - [ ] Join and save as artefact
+- [x] Data loading
+    - [x] Ciqual data
+        - [x] Extract Co2e from data
+    - [x] OpenFoodFacts data
+        - [x] Filter data with known CIQUAL class
+    - [x] Data loading/saving
 - [ ] Exploratory data analysis
     - [ ] Product distribution across languages
     - [ ] Product distribution across classes
     - [ ] Environmental footprint score across classes
-- [ ] Model definition
-    - [ ] MLM on unlabelled data
-    - [ ] Classification model
-        - [ ] Averaged Co2E by probability classes
-    - [ ] Regression model
+- [x] Model definition
+    - [x] MLM on unlabelled data
+    - [x] Classification model
+    - [x] Regression model
+    - [x] Hybrid model
     - [ ] Baseline models
         - [ ] Cosine similarity with LCI name
         - [ ] Zero-shot autoregressive LLM
-- [ ] Training pipeline
-- [ ] Evaluation methodology
+- [x] Training pipeline
+- [ ] Evaluation pipeline
     - [ ] Split across products
     - [ ] Split across languages
-    - [ ] Classification metrics (accuracy, F1)
-    - [ ] Regression metrics (MAE)
+    - [x] Classification metrics (accuracy, F1)
+    - [x] Regression metrics (MAE)
 - [ ] Streamlit demo
 - [ ] Testing & reproducibility
+- [ ] Documentation
 - [ ] Writeup & submission
