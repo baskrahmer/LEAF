@@ -12,10 +12,12 @@ class Config:
     num_workers: int = 0
 
     # Data settings
-    sample_size: int = 100
+    sample_size: int = 20
     test_size: float = 0.2
     cache_data: bool = True
     data_analysis: bool = False
+    ciqual_filename: str = "ciqual.csv"
+    products_filename: str = "products.jsonl"
 
     # Model and generic training
     model_name: str = "hf-internal-testing/tiny-random-bert"

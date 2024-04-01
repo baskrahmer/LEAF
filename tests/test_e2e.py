@@ -3,7 +3,10 @@ import copy
 from src.config import Config
 from src.main import main
 
-dummy_config = Config()
+dummy_config = Config(
+    ciqual_filename="ciqual_sample.csv",
+    products_filename="products_sample.jsonl",
+)
 
 
 def test_train_classification():

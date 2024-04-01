@@ -1,3 +1,5 @@
 data
+!data/ciqual_sample.csv
+!data/products_sample.jsonl
 .venv
 .python-version
