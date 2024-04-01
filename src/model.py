@@ -53,15 +53,14 @@ class HybridHead(nn.Module):
     """
     Hybrid model head with predictions based on both categorical and continuous target variables.
     """
-    # TODO this one should have a class_idx_to_co2e mapping
-    # TODO Essentially the probability distribution would linearly map to a constant and summed together to give a value. It is questionable whether such a linear mapping brings any signal, since it is essentially a linear combination of the logits which could also be learned. A weighted combination of the different training signals is however a different story.
 
-    def __init__(self, hidden_dim, num_classes):
+    def __init__(self, hidden_dim: int, num_classes: int, alpha: float):
         super().__init__()
         self.classification_linear = nn.Linear(in_features=hidden_dim, out_features=num_classes)
         self.regression_linear = nn.Linear(in_features=num_classes, out_features=1)
         self.regression_loss = nn.MSELoss()
         self.classification_loss = nn.CrossEntropyLoss()
+        self.alpha = alpha
 
     def __call__(self, activations, classes, regressands, **kwargs):
         logits = self.classification_linear(activations)
@@ -71,7 +70,7 @@ class HybridHead(nn.Module):
         return {
             "predicted_values": predicted_values,
             "logits": logits,
-            "loss": classification_loss + regression_loss,
+            "loss": self.alpha * classification_loss + (1 - self.alpha) * regression_loss,
         }
 
 
@@ -94,7 +93,7 @@ class LEAFModel(nn.Module):
         elif c.objective == "regression":
             self.head = RegressionHead(hidden_dim=hidden_dim)
         elif c.objective == "hybrid":
-            self.head = HybridHead(hidden_dim=hidden_dim, num_classes=num_classes)
+            self.head = HybridHead(hidden_dim=hidden_dim, num_classes=num_classes, alpha=c.alpha)
         else:
             raise ValueError
 
