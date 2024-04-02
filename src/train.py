@@ -31,7 +31,7 @@ def train(c: Config, data_path: str, base_model: Optional[PreTrainedModel], mlm:
         class_to_idx = {}
     else:
         class_to_idx = get_class_mapping(train_ds, val_ds)
-        class_to_co2e = get_ciqual_mapping()
+        class_to_co2e = get_ciqual_mapping(c)
         map_fn = lambda x: prepare_inputs(x, tokenizer, tokenizer_kwargs, class_to_idx, class_to_co2e)
         collate_fn = get_collate_fn(tokenizer)
     train_ds = train_ds.map(map_fn, num_proc=max(c.num_workers, 1))

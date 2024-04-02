@@ -62,7 +62,7 @@ def get_class_mapping(train_ds, val_ds):
     return class_to_idx
 
 
-def get_ciqual_mapping():
-    ciqual_data = get_ciqual_data()
+def get_ciqual_mapping(c: Config):
+    ciqual_data = get_ciqual_data(c)
     class_to_co2e = {str(c): co2 for c, co2 in zip(ciqual_data["Code AGB"], ciqual_data["Score unique EF"])}  # TODO
     return class_to_co2e

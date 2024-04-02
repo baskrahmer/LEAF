@@ -96,8 +96,8 @@ def prepare_inputs(sample: dict, tokenizer: PreTrainedTokenizerBase, tokenizer_k
     return sample
 
 
-def get_ciqual_data():
+def get_ciqual_data(c: Config):
     # TODO deduplicate this with other CIQUAL loading logic
     data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
-    ciqual_path = os.path.join(data_dir, "ciqual.csv")
+    ciqual_path = os.path.join(data_dir, c.ciqual_filename)
     return pd.read_csv(ciqual_path)
