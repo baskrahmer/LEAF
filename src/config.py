@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-
+from typing import Literal
 
 @dataclass
 class Config:
@@ -21,7 +21,7 @@ class Config:
 
     # Model and generic training
     model_name: str = "hf-internal-testing/tiny-random-bert"
-    objective: str = "hybrid"  # TODO add options "classification", "regression", "hybrid"
+    objective: Literal["classification", "regression", "hybrid"] = "hybrid"
     alpha: float = 0.5  # Only used for hybrid head
     fp16: bool = False
     max_length: int = 512
