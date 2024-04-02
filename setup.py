@@ -8,7 +8,7 @@ REQUIREMENTS = ["datasets", "transformers", "torch"]
 
 TEST_REQUIREMENTS = ["pytest"]
 QUALITY_REQUIREMENTS = ["black", "ruff"]
-TRAINING_REQUIREMENTS = ["lightning", "wandb"]
+TRAINING_REQUIREMENTS = ["lightning", "wandb", "torchmetrics"]
 
 EXTRAS_REQUIREMENTS = {
     "dev": TEST_REQUIREMENTS + QUALITY_REQUIREMENTS,
