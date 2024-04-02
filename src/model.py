@@ -21,7 +21,7 @@ class RegressionHead(nn.Module):
         self.activation = nn.Softplus()
         self.loss = nn.MSELoss()
 
-    def __call__(self, activations, regressands, **kwargs):
+    def __call__(self, activations, regressands, **kwargs) -> dict:
         predicted_values = self.activation(self.linear(activations))
         loss = self.loss(predicted_values, regressands)
         return {
@@ -40,7 +40,7 @@ class ClassificationHead(nn.Module):
         self.linear = nn.Linear(in_features=hidden_dim, out_features=num_classes)
         self.loss = nn.CrossEntropyLoss()
 
-    def __call__(self, activations, classes, **kwargs):
+    def __call__(self, activations, classes, **kwargs) -> dict:
         logits = self.linear(activations)
         loss = self.loss(logits, classes)
         return {
@@ -62,7 +62,7 @@ class HybridHead(nn.Module):
         self.classification_loss = nn.CrossEntropyLoss()
         self.alpha = alpha
 
-    def __call__(self, activations, classes, regressands, **kwargs):
+    def __call__(self, activations, classes, regressands, **kwargs) -> dict:
         logits = self.classification_linear(activations)
         classification_loss = self.classification_loss(logits, classes)
         predicted_values = self.regression_linear(logits)
@@ -97,8 +97,7 @@ class LEAFModel(nn.Module):
         else:
             raise ValueError
 
-    def forward(self, input_ids, attention_mask, **kwargs):
-        # TODO add typing for returning predictions and loss
+    def forward(self, input_ids, attention_mask, **kwargs) -> dict:
         outputs = self.base_model(input_ids=input_ids, attention_mask=attention_mask)
         return self.head(outputs.pooler_output, **kwargs)
 
@@ -108,8 +107,9 @@ class LightningWrapper(lightning.LightningModule):
     Wrapper class for the model to be used with PyTorch Lightning.
     """
 
-    def __init__(self, c: Config, tokenizer: PreTrainedTokenizerBase, model, num_classes, mlm) -> None:
-        # TODO add model type hint
+    def __init__(
+            self, c: Config, tokenizer: PreTrainedTokenizerBase, model: PreTrainedModel, num_classes: int, mlm: bool
+    ) -> None:
         super().__init__()
         self.model = model
         self.tokenizer = tokenizer
@@ -144,7 +144,7 @@ class LightningWrapper(lightning.LightningModule):
 
     def update_metrics(
             self,
-            batch: dict,
+            batch,
             outputs: dict,
             metrics: dict[str, torch.nn.Module],
     ) -> None:
@@ -215,7 +215,7 @@ class LightningWrapper(lightning.LightningModule):
         return [optimizer], [scheduler]
 
 
-def get_tokenizer(c):
+def get_tokenizer(c: Config) -> Tuple[PreTrainedTokenizerBase, dict]:
     tokenizer = AutoTokenizer.from_pretrained(c.model_name)
     tokenizer_kwargs = {"padding": True, "truncation": True, "max_length": c.max_length}
     return tokenizer, tokenizer_kwargs
