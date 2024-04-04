@@ -8,10 +8,10 @@
     - [x] OpenFoodFacts data
         - [x] Filter data with known CIQUAL class
     - [x] Data loading/saving
-- [ ] Exploratory data analysis
-    - [ ] Product distribution across languages
-    - [ ] Product distribution across classes
-    - [ ] Environmental footprint score across classes
+- [x] Exploratory data analysis
+    - [x] Product distribution across languages
+    - [x] Product distribution across classes
+    - [x] Environmental footprint score across classes
 - [x] Model definition
     - [x] MLM on unlabelled data
     - [x] Classification model

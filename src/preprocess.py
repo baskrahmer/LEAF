@@ -1,10 +1,12 @@
 import json
 import os
+
 import pandas as pd
 from tqdm import tqdm
 from transformers import PreTrainedTokenizerBase
 
 from src.config import Config
+from src.plot import make_data_analysis_report
 
 
 def filter_data(c: Config, mlm: bool = False) -> str:
@@ -34,7 +36,7 @@ def filter_data(c: Config, mlm: bool = False) -> str:
     #  ciqual_food_name_tags, categories_old,  category_properties, categories_properties and categories_properties
 
     i = 0
-    lang_frequencies, label_frequencies = {}, {}
+    lang_frequencies, label_frequencies, lang_label_frequencies = {}, {}, {}
     with open(products_path) as f, open(filtered_products_path, 'w') as out_file:
         for line in tqdm(f):
             product = json.loads(line)
@@ -69,13 +71,19 @@ def filter_data(c: Config, mlm: bool = False) -> str:
             if not mlm:
                 label_frequencies[label] = label_frequencies.get(label, 0) + 1
 
+            if lang not in lang_label_frequencies:
+                lang_label_frequencies[lang] = {}
+            if label not in lang_label_frequencies[lang]:
+                lang_label_frequencies[lang][label] = 0
+            lang_label_frequencies[lang][label] += 1
+
             i += 1
             if c.sample_size and i > c.sample_size:
                 break
 
     if c.data_analysis:
-        # TODO make histogram
-        footprint_scores = pd.read_csv(ciqual_path)["Score unique EF"]
+        make_data_analysis_report(c, ciqual_path, lang_frequencies, label_frequencies, lang_label_frequencies,
+                                  output_path)
 
     return filtered_products_path
 
