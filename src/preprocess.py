@@ -8,7 +8,7 @@ from src.config import Config
 
 
 def filter_data(c: Config, mlm: bool = False) -> str:
-    config_hash = str(hash((_ for _ in [c.sample_size, c.test_size])))
+    config_hash = str(hash(tuple([c.sample_size, c.test_size])))
 
     filtered_products_filename = "products_filtered.jsonl" if not mlm else "products_mlm.jsonl"
     data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
