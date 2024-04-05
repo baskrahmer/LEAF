@@ -41,6 +41,9 @@ def filter_data(c: Config, mlm: bool = False) -> str:
         for line in tqdm(f):
             product = json.loads(line)
 
+            if not product.get("product_name"):
+                continue
+
             if mlm:
                 filtered_entry = {c: product.get(c) for c in columns}
                 out_file.write(json.dumps(filtered_entry))
