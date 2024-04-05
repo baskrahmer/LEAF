@@ -1,11 +1,14 @@
+from typing import Tuple, List, Optional, Set
+
 import lightning
+import numpy as np
 import torch
+import torch.nn.functional as F
 from torch import nn
 from torchmetrics import Accuracy, F1Score, MeanAbsoluteError, MeanSquaredError
 from torchmetrics.text import Perplexity
 from transformers import AutoTokenizer, AutoModel, get_linear_schedule_with_warmup
 from transformers import PreTrainedTokenizerBase, PreTrainedModel
-from typing import Tuple, List, Optional
 
 from src.config import Config
 
@@ -35,15 +38,20 @@ class ClassificationHead(nn.Module):
     Model head to predict a categorical target variable.
     """
 
-    def __init__(self, hidden_dim: int, num_classes: int):
+    def __init__(self, hidden_dim: int, num_classes: int, idx_to_co2e: dict):
         super().__init__()
         self.linear = nn.Linear(in_features=hidden_dim, out_features=num_classes)
         self.loss = nn.CrossEntropyLoss()
 
+        # Turn dict into lookup table
+        self.idx_to_co2e = idx_to_co2e
+
     def __call__(self, activations, classes, **kwargs) -> dict:
         logits = self.linear(activations)
         loss = self.loss(logits, classes)
+        _, predicted_classes = torch.max(F.softmax(logits, dim=1), dim=1)
         return {
+            "predicted_values": torch.tensor([self.idx_to_co2e[p] for p in predicted_classes.numpy()]).unsqueeze(-1),
             "logits": logits,
             "loss": loss,
         }
@@ -76,7 +84,8 @@ class HybridHead(nn.Module):
 
 class LEAFModel(nn.Module):
 
-    def __init__(self, c, num_classes: int, base_model: Optional[PreTrainedModel] = None):
+    def __init__(self, c, num_classes: int, base_model: Optional[PreTrainedModel] = None,
+                 idx_to_co2e: Optional[dict] = None):
         super().__init__()
         self.base_model = AutoModel.from_pretrained(c.model_name)
 
@@ -89,7 +98,7 @@ class LEAFModel(nn.Module):
 
         hidden_dim = self.base_model.config.hidden_size
         if c.objective == "classification":
-            self.head = ClassificationHead(hidden_dim=hidden_dim, num_classes=num_classes)
+            self.head = ClassificationHead(hidden_dim=hidden_dim, num_classes=num_classes, idx_to_co2e=idx_to_co2e)
         elif c.objective == "regression":
             self.head = RegressionHead(hidden_dim=hidden_dim)
         elif c.objective == "hybrid":
@@ -108,7 +117,8 @@ class LightningWrapper(lightning.LightningModule):
     """
 
     def __init__(
-            self, c: Config, tokenizer: PreTrainedTokenizerBase, model: PreTrainedModel, num_classes: int, mlm: bool
+            self, c: Config, tokenizer: PreTrainedTokenizerBase, model: PreTrainedModel, num_classes: int, mlm: bool,
+            languages: Set[str], classes: Set[str]
     ) -> None:
         super().__init__()
         self.model = model
@@ -122,43 +132,59 @@ class LightningWrapper(lightning.LightningModule):
         self.test_batch_size = c.test_batch_size
         self.loss_fn = torch.nn.CrossEntropyLoss(ignore_index=self.tokenizer.pad_token_id)
 
-        self.train_metrics = self.get_metric_dict(c, "train", num_classes=num_classes,
-                                                  objective="mlm" if mlm else c.objective)
-        self.val_metrics = self.get_metric_dict(c, "val", num_classes=num_classes,
-                                                objective="mlm" if mlm else c.objective)
-        self.test_metrics = self.get_metric_dict(c, "test", num_classes=num_classes,
-                                                 objective="mlm" if mlm else c.objective)
+        def make_filter(key, value):
+            return lambda x: np.array(x[key]) == value
+
+        language_filters = {l: make_filter("lang", l) for l in languages}
+        class_filters = {c: make_filter("classes", c) for c in classes}
+        self.metric_filters = language_filters | class_filters | {"all": lambda x: [True] * len(x["lang"])}
+
+        self.train_metrics = {}
+        self.val_metrics = {}
+        self.test_metrics = {}
+
+        for filter in self.metric_filters.keys():
+            self.train_metrics |= self.get_metric_dict(c, filter, num_classes=num_classes,
+                                                       objective="mlm" if mlm else c.objective)
+            self.val_metrics |= self.get_metric_dict(c, filter, num_classes=num_classes,
+                                                     objective="mlm" if mlm else c.objective)
+            self.test_metrics |= self.get_metric_dict(c, filter, num_classes=num_classes,
+                                                      objective="mlm" if mlm else c.objective)
 
     def get_metric_dict(self, c: Config, split: str, num_classes: int, objective: str) -> dict[str, torch.nn.Module]:
         metric_dict = {}
-        # TODO matrix with languages and classes to narrow down comparison, maybe just as a test metric though
+        metric_dict[f"{split}_mae"] = MeanAbsoluteError().to(self._device)
+        metric_dict[f"{split}_mse"] = MeanSquaredError().to(self._device)
         if objective == "classification" or objective == "hybrid":
             metric_dict[f"{split}_accuracy"] = Accuracy("multiclass", num_classes=num_classes).to(self._device)
             metric_dict[f"{split}_f1"] = F1Score("multiclass", num_classes=num_classes).to(self._device)
-        if objective == "regression" or objective == "hybrid":
-            metric_dict[f"{split}_mae"] = MeanAbsoluteError().to(self._device)
-            metric_dict[f"{split}_mse"] = MeanSquaredError().to(self._device)
         if objective == "mlm":
             metric_dict[f"{split}_perplexity"] = Perplexity().to(self._device)
         return metric_dict
 
-    def update_metrics(
-            self,
-            batch,
-            outputs: dict,
-            metrics: dict[str, torch.nn.Module],
-    ) -> None:
+    def update_metrics(self, batch, outputs: dict, metrics: dict[str, torch.nn.Module], data_split: str) -> None:
         for metric_key, metric in metrics.items():
+            filter_fn = self.metric_filters["_".join(metric_key.split("_")[:-1])]
+            filter_idx = filter_fn(batch)
+            if not any(filter_idx):
+                continue
+
             if metric_key.endswith("f1") or metric_key.endswith("accuracy"):
-                value = metric(preds=outputs["logits"], target=batch['classes'])
+                logits = outputs["logits"][filter_idx]
+                classes = batch['classes'][filter_idx]
+                value = metric(preds=logits, target=classes)
             elif metric_key.endswith("perplexity"):
+                ids = batch.data["input_ids"][filter_idx]
                 # TODO is the token offset correct here?
-                value = metric(preds=outputs["logits"], target=batch.data["input_ids"])
+                value = metric(preds=logits, target=ids)
             else:
+                pred_values = outputs["predicted_values"][filter_idx]
+                regressands = batch['regressands'][filter_idx]
                 # TODO this unsqueezing is perhaps cleaner when applied during collation
-                value = metric(preds=outputs["predicted_values"], target=batch['regressands'].unsqueeze(-1))
-            self.log(metric_key, value=value, on_step=metric_key.startswith("train"), on_epoch=True, prog_bar=True,
-                     batch_size=self.train_batch_size if metric_key.startswith("train") else self.test_batch_size)
+                value = metric(preds=pred_values, target=regressands.unsqueeze(-1))
+            self.log(f"{data_split}_{metric_key}", value=value, on_step=data_split == "train", on_epoch=True,
+                     prog_bar=True,
+                     batch_size=self.train_batch_size if data_split == "train" else self.test_batch_size)
 
     @staticmethod
     def clear_metrics(metrics: dict[str, torch.nn.Module]):
@@ -168,19 +194,19 @@ class LightningWrapper(lightning.LightningModule):
     def training_step(self, batch: dict):
         outputs = self.forward(batch)
         self.log("train_loss", outputs["loss"], on_step=True, on_epoch=True, batch_size=self.train_batch_size)
-        self.update_metrics(batch, outputs, self.train_metrics)
+        self.update_metrics(batch, outputs, self.train_metrics, "train")
         return outputs["loss"]
 
     def validation_step(self, batch: dict):
         outputs = self.forward(batch)
         self.log("val_loss", outputs["loss"], on_step=False, on_epoch=True, batch_size=self.test_batch_size)
-        self.update_metrics(batch, outputs, self.val_metrics)
+        self.update_metrics(batch, outputs, self.val_metrics, "val")
         return outputs["loss"]
 
     def test_step(self, batch: dict):
         outputs = self.forward(batch)
         self.log("test_loss", outputs["loss"], on_step=False, on_epoch=True, batch_size=self.test_batch_size)
-        self.update_metrics(batch, outputs, self.test_metrics)
+        self.update_metrics(batch, outputs, self.test_metrics, "test")
         return outputs["loss"]
 
     def on_train_epoch_end(self) -> None:

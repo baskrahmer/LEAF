@@ -21,9 +21,9 @@
         - [ ] Cosine similarity with LCI name
         - [ ] Zero-shot autoregressive LLM
 - [x] Training pipeline
-- [ ] Evaluation pipeline
-    - [ ] Split across products
-    - [ ] Split across languages
+- [x] Evaluation pipeline
+    - [x] Split across products
+    - [x] Split across languages
     - [x] Classification metrics (accuracy, F1)
     - [x] Regression metrics (MAE)
 - [ ] Streamlit demo

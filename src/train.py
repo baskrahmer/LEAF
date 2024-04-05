@@ -1,10 +1,11 @@
+from typing import Optional
+
 import torch
 from datasets import DatasetDict
 from datasets import load_dataset
 from lightning import Trainer, seed_everything
 from torch.utils.data import DataLoader
 from transformers import PreTrainedModel, AutoModelForMaskedLM, DataCollatorForLanguageModeling
-from typing import Optional
 
 from src.config import Config
 from src.model import LightningWrapper, LEAFModel, get_tokenizer
@@ -29,9 +30,11 @@ def train(c: Config, data_path: str, base_model: Optional[PreTrainedModel], mlm:
         map_fn = lambda x: prepare_inputs_mlm(x, tokenizer, tokenizer_kwargs)
         collate_fn = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm_probability=c.mlm_probability)
         class_to_idx = {}
+        idx_to_co2e = {}
     else:
         class_to_idx = get_class_mapping(train_ds, val_ds)
         class_to_co2e = get_ciqual_mapping(c)
+        idx_to_co2e = {idx: class_to_co2e[c] for c, idx in class_to_idx.items()}
         map_fn = lambda x: prepare_inputs(x, tokenizer, tokenizer_kwargs, class_to_idx, class_to_co2e)
         collate_fn = get_collate_fn(tokenizer)
     train_ds = train_ds.map(map_fn, num_proc=max(c.num_workers, 1))
@@ -44,8 +47,11 @@ def train(c: Config, data_path: str, base_model: Optional[PreTrainedModel], mlm:
     if mlm:
         base_model = AutoModelForMaskedLM.from_pretrained(c.model_name)
     else:
-        base_model = LEAFModel(c, num_classes=len(class_to_idx.keys()), base_model=base_model)
-    lightning_model = LightningWrapper(c, tokenizer, model=base_model, num_classes=len(class_to_idx.keys()), mlm=mlm)
+        base_model = LEAFModel(c, num_classes=len(class_to_idx.keys()), base_model=base_model,
+                               idx_to_co2e=idx_to_co2e)
+    lightning_model = LightningWrapper(c, tokenizer, model=base_model, num_classes=len(class_to_idx.keys()), mlm=mlm,
+                                       languages=set(train_ds.unique("lang") + val_ds.unique("lang")),
+                                       classes=set(train_ds.unique("label") + val_ds.unique("label")))
 
     trainer = Trainer(
         accelerator="auto" if (torch.cuda.is_available() and c.use_gpu) else "cpu",
