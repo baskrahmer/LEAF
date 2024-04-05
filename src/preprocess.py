@@ -10,7 +10,7 @@ from src.plot import make_data_analysis_report
 
 
 def filter_data(c: Config, mlm: bool = False) -> str:
-    config_hash = str(hash(tuple([c.sample_size, c.test_size])))
+    config_hash = str(hash(tuple([c.sample_size, c.test_size, mlm])))
 
     filtered_products_filename = "products_filtered.jsonl" if not mlm else "products_mlm.jsonl"
     data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
@@ -70,12 +70,12 @@ def filter_data(c: Config, mlm: bool = False) -> str:
             lang_frequencies[lang] = lang_frequencies.get(lang, 0) + 1
             if not mlm:
                 label_frequencies[label] = label_frequencies.get(label, 0) + 1
+                if label not in lang_label_frequencies[lang]:
+                    lang_label_frequencies[lang][label] = 0
+                lang_label_frequencies[lang][label] += 1
 
             if lang not in lang_label_frequencies:
                 lang_label_frequencies[lang] = {}
-            if label not in lang_label_frequencies[lang]:
-                lang_label_frequencies[lang][label] = 0
-            lang_label_frequencies[lang][label] += 1
 
             i += 1
             if c.sample_size and i > c.sample_size:
@@ -83,7 +83,7 @@ def filter_data(c: Config, mlm: bool = False) -> str:
 
     if c.data_analysis:
         make_data_analysis_report(c, ciqual_path, lang_frequencies, label_frequencies, lang_label_frequencies,
-                                  output_path)
+                                  output_path, mlm)
 
     return filtered_products_path
 

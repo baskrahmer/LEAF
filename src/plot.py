@@ -172,15 +172,16 @@ def save_dict_to_json(data, save_path, filename):
 
 
 def make_data_analysis_report(c: Config, ciqual_path: str, lang_frequencies: dict, label_frequencies: dict,
-                              lang_label_frequencies: dict, output_path: str):
+                              lang_label_frequencies: dict, output_path: str, mlm: bool):
     # Ensure the save directory exists
     os.makedirs(output_path, exist_ok=True)
 
-    # Plotting and saving plots
-    plot_ciqual_distribution(ciqual_path, output_path)
-    plot_lang_label_frequencies(lang_label_frequencies, output_path)
-
     # Saving dictionaries to JSON files
     save_dict_to_json(lang_frequencies, output_path, 'lang_frequencies.json')
-    save_dict_to_json(label_frequencies, output_path, 'label_frequencies.json')
-    save_dict_to_json(lang_label_frequencies, output_path, 'lang_label_frequencies.json')
+    if not mlm:
+        save_dict_to_json(label_frequencies, output_path, 'label_frequencies.json')
+        save_dict_to_json(lang_label_frequencies, output_path, 'lang_label_frequencies.json')
+
+        # Plotting and saving plots
+        plot_ciqual_distribution(ciqual_path, output_path)
+        plot_lang_label_frequencies(lang_label_frequencies, output_path)
