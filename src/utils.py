@@ -1,10 +1,11 @@
 import os
+from typing import Any
+from typing import List
+
 import torch
 from lightning import pytorch as pl
 from lightning.pytorch.loggers import CSVLogger, WandbLogger
 from transformers import PreTrainedTokenizerBase, DataCollatorWithPadding
-from typing import Any
-from typing import List
 
 from src.config import Config
 from src.preprocess import get_ciqual_data
@@ -50,7 +51,7 @@ def get_collate_fn(tokenizer: PreTrainedTokenizerBase):
         if "classes" in batch[0]:
             return_dict["classes"] = torch.tensor([_["classes"] for _ in batch])
         if "regressands" in batch[0]:
-            return_dict["regressands"] = torch.tensor([_["regressands"] for _ in batch])
+            return_dict["regressands"] = torch.tensor([_["regressands"] for _ in batch]).unsqueeze(-1)
         return return_dict
 
     return collate_fn

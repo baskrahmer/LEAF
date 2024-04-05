@@ -180,8 +180,7 @@ class LightningWrapper(lightning.LightningModule):
             else:
                 pred_values = outputs["predicted_values"][filter_idx]
                 regressands = batch['regressands'][filter_idx]
-                # TODO this unsqueezing is perhaps cleaner when applied during collation
-                value = metric(preds=pred_values, target=regressands.unsqueeze(-1))
+                value = metric(preds=pred_values, target=regressands)
             self.log(f"{data_split}_{metric_key}", value=value, on_step=data_split == "train", on_epoch=True,
                      prog_bar=True,
                      batch_size=self.train_batch_size if data_split == "train" else self.test_batch_size)
