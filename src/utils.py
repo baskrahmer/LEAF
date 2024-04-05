@@ -5,7 +5,8 @@ from typing import List
 import torch
 from lightning import pytorch as pl
 from lightning.pytorch.loggers import CSVLogger, WandbLogger
-from transformers import PreTrainedTokenizerBase, DataCollatorWithPadding
+from transformers import DataCollatorForLanguageModeling, DataCollatorWithPadding
+from transformers import PreTrainedTokenizerBase
 
 from src.config import Config
 from src.preprocess import get_ciqual_data
@@ -36,6 +37,18 @@ def get_callbacks(c: Config) -> List[pl.callbacks.Callback]:
             every_n_epochs=1
         ),
     ]
+
+
+def get_mlm_collate_fn(tokenizer, mlm_probability):
+    collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm_probability=mlm_probability)
+
+    def collate_fn(batch: List[dict[str, Any]]) -> dict[str, Any]:
+        languages = [_.pop("lang") for _ in batch]
+        return_dict = collator(batch).data
+        return_dict["lang"] = languages
+        return return_dict
+
+    return collate_fn
 
 
 def get_collate_fn(tokenizer: PreTrainedTokenizerBase):

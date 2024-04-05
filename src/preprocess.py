@@ -72,13 +72,12 @@ def filter_data(c: Config, mlm: bool = False) -> str:
             lang = product.get("lang")
             lang_frequencies[lang] = lang_frequencies.get(lang, 0) + 1
             if not mlm:
+                if lang not in lang_label_frequencies:
+                    lang_label_frequencies[lang] = {}
                 label_frequencies[label] = label_frequencies.get(label, 0) + 1
                 if label not in lang_label_frequencies[lang]:
                     lang_label_frequencies[lang][label] = 0
                 lang_label_frequencies[lang][label] += 1
-
-            if lang not in lang_label_frequencies:
-                lang_label_frequencies[lang] = {}
 
             i += 1
             if c.sample_size and i > c.sample_size:
@@ -95,7 +94,10 @@ def prepare_inputs_mlm(sample: dict, tokenizer: PreTrainedTokenizerBase, tokeniz
     encodings = tokenizer(sample.pop('product_name'), **tokenizer_kwargs)
     sample['input_ids'] = encodings.input_ids
     sample['attention_mask'] = encodings.attention_mask
-    sample.pop('lang')  # TODO make this work with collator so we dont have to pop
+
+    # Fixes DataSet.map dropping the "lang" column for unknown reasons. This can probably also be os.sleep as a fix
+    if "lang" not in sample:
+        raise ValueError
     return sample
 
 

@@ -153,13 +153,14 @@ class LightningWrapper(lightning.LightningModule):
 
     def get_metric_dict(self, c: Config, split: str, num_classes: int, objective: str) -> dict[str, torch.nn.Module]:
         metric_dict = {}
-        metric_dict[f"{split}_mae"] = MeanAbsoluteError().to(self._device)
-        metric_dict[f"{split}_mse"] = MeanSquaredError().to(self._device)
-        if objective == "classification" or objective == "hybrid":
-            metric_dict[f"{split}_accuracy"] = Accuracy("multiclass", num_classes=num_classes).to(self._device)
-            metric_dict[f"{split}_f1"] = F1Score("multiclass", num_classes=num_classes).to(self._device)
         if objective == "mlm":
             metric_dict[f"{split}_perplexity"] = Perplexity().to(self._device)
+        else:
+            metric_dict[f"{split}_mae"] = MeanAbsoluteError().to(self._device)
+            metric_dict[f"{split}_mse"] = MeanSquaredError().to(self._device)
+            if objective == "classification" or objective == "hybrid":
+                metric_dict[f"{split}_accuracy"] = Accuracy("multiclass", num_classes=num_classes).to(self._device)
+                metric_dict[f"{split}_f1"] = F1Score("multiclass", num_classes=num_classes).to(self._device)
         return metric_dict
 
     def update_metrics(self, batch, outputs: dict, metrics: dict[str, torch.nn.Module], data_split: str) -> None:
@@ -174,8 +175,8 @@ class LightningWrapper(lightning.LightningModule):
                 classes = batch['classes'][filter_idx]
                 value = metric(preds=logits, target=classes)
             elif metric_key.endswith("perplexity"):
-                ids = batch.data["input_ids"][filter_idx]
-                # TODO is the token offset correct here?
+                ids = batch["input_ids"][filter_idx]
+                logits = outputs["logits"][filter_idx]
                 value = metric(preds=logits, target=ids)
             else:
                 pred_values = outputs["predicted_values"][filter_idx]
@@ -218,7 +219,7 @@ class LightningWrapper(lightning.LightningModule):
         self.clear_metrics(self.test_metrics)
 
     def forward(self, batch: dict) -> dict:
-        return self.model(**{k: v for k, v in batch.items()})
+        return self.model(**{k: v for k, v in batch.items() if k != "lang"})
 
     def configure_optimizers(self) -> Tuple[List[torch.optim.Optimizer], List[dict]]:
         optimizer = torch.optim.AdamW(
