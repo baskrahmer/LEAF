@@ -15,6 +15,7 @@ EXTRAS_REQUIREMENTS = {
     "dev": TEST_REQUIREMENTS + QUALITY_REQUIREMENTS,
     "test": TEST_REQUIREMENTS,
     "training": TRAINING_REQUIREMENTS,
+    "visualization": VISUALIZATION_REQUIREMENTS,
 }
 setup(
     author="Bas Krahmer",
