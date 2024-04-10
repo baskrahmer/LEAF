@@ -1,12 +1,11 @@
 import os
-from typing import Any
-from typing import List
-
 import torch
 from lightning import pytorch as pl
 from lightning.pytorch.loggers import CSVLogger, WandbLogger
 from transformers import DataCollatorForLanguageModeling, DataCollatorWithPadding
 from transformers import PreTrainedTokenizerBase
+from typing import Any
+from typing import List
 
 from src.config import Config
 from src.preprocess import get_ciqual_data
@@ -15,7 +14,7 @@ from src.preprocess import get_ciqual_data
 def get_loggers(c: Config):
     loggers = [CSVLogger(save_dir=c.save_path, name=c.version)]
     if c.use_wandb:
-        loggers.append(WandbLogger(name=c.version, save_dir=c.save_path, version=c.version, project="perturbers"))
+        loggers.append(WandbLogger(name=c.version, save_dir=c.save_path, version=c.version, project="leaf"))
     return loggers
 
 
