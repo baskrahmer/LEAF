@@ -21,8 +21,8 @@
         - [ ] Cosine similarity with LCI name
         - [ ] Zero-shot autoregressive LLM
 - [x] Training pipeline
-- [ ] Class imbalances
-    - [ ] Train/test splits balanced by language and class
+- [x] Class imbalances
+    - [x] Train/test splits balanced by language and class
     - [ ] Language and class weights in loss function
 - [x] Evaluation pipeline
     - [x] Split across products
