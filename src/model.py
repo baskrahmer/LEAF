@@ -107,7 +107,7 @@ class LEAFModel(nn.Module):
 
     def forward(self, input_ids, attention_mask, **kwargs) -> dict:
         outputs = self.base_model(input_ids=input_ids, attention_mask=attention_mask)
-        return self.head(outputs.pooler_output, **kwargs)
+        return self.head(outputs.last_hidden_state[:, 0], **kwargs)
 
 
 class LightningWrapper(lightning.LightningModule):
