@@ -1,11 +1,10 @@
+from typing import Optional
+
 import torch
-from collections import Counter
 from datasets import DatasetDict
-from datasets import load_dataset
 from lightning import Trainer, seed_everything
 from torch.utils.data import DataLoader
 from transformers import PreTrainedModel, AutoModelForMaskedLM
-from typing import Optional
 
 from src.config import Config
 from src.model import LightningWrapper, LEAFModel, get_tokenizer
@@ -14,23 +13,10 @@ from src.utils import get_loggers, get_callbacks, get_collate_fn, get_mlm_collat
     get_ciqual_mapping
 
 
-# TODO prevent MLM-based dataset contamination for classification dataset
-def get_dataset(c: Config, data_path: str, test_size: float) -> DatasetDict:
-    dataset = load_dataset("json", data_files=data_path)["train"]
-    column_name = "stratification_column"
-    dataset = dataset.map(lambda x: {column_name: f"{x['lang']}_{x['label']}"}, num_proc=4)
-    dataset = dataset.class_encode_column(column_name)
-    if c.drop_singular_classes:
-        value_counts = Counter(dataset[column_name])
-        dataset = dataset.filter(lambda x: value_counts[x[column_name]] > 1)
-    return dataset.train_test_split(test_size=test_size, stratify_by_column=column_name).remove_columns(column_name)
-
-
-def train(c: Config, data_path: str, base_model: Optional[PreTrainedModel], mlm: bool = False) -> PreTrainedModel:
+def train(c: Config, dataset: DatasetDict, base_model: Optional[PreTrainedModel], mlm: bool = False) -> PreTrainedModel:
     seed_everything(c.seed, workers=True)
 
     tokenizer, tokenizer_kwargs = get_tokenizer(c)
-    dataset = get_dataset(c, data_path, c.test_size)
 
     train_ds = dataset["train"]
     val_ds = dataset["test"]

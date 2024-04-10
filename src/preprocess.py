@@ -1,5 +1,6 @@
 import json
 import os
+from typing import Tuple, Any
 
 import pandas as pd
 from tqdm import tqdm
@@ -40,34 +41,22 @@ def filter_data(c: Config, mlm: bool = False) -> str:
     with open(products_path) as f, open(filtered_products_path, 'w') as out_file:
         for line in tqdm(f):
             product = json.loads(line)
+            successful = False
 
             if not product.get("product_name"):
                 continue
 
-            if mlm:
-                filtered_entry = {c: product.get(c) for c in columns}
-                out_file.write(json.dumps(filtered_entry))
-                out_file.write('\n')
+            if "categories_properties" in product:
+                successful, label = extract_labelled_point(agb_set, ciqual_to_agb, columns, out_file, product, mlm)
 
-            elif "categories_properties" in product:
-                categories = product.pop("categories_properties")
-                if categories.get("agribalyse_food_code:en") in agb_set:
-                    label = categories.get("agribalyse_food_code:en")
-                elif categories.get("ciqual_food_code:en") in ciqual_to_agb:
-                    # TODO investigate why this happens
-                    label = ciqual_to_agb[categories.get("ciqual_food_code:en")]
-                elif categories.get("agribalyse_proxy_food_code:en") in agb_set:
-                    label = categories.get("agribalyse_proxy_food_code:en")
+            if mlm:
+                if not successful:
+                    filtered_entry = {c: product.get(c) for c in columns}
+                    out_file.write(json.dumps(filtered_entry))
+                    out_file.write('\n')
+
                 else:
                     continue
-
-                filtered_entry = {c: product.get(c) for c in columns}
-                filtered_entry["label"] = label
-                out_file.write(json.dumps(filtered_entry))
-                out_file.write('\n')
-
-            else:
-                continue
 
             lang = product.get("lang")
             lang_frequencies[lang] = lang_frequencies.get(lang, 0) + 1
@@ -88,6 +77,25 @@ def filter_data(c: Config, mlm: bool = False) -> str:
                                   output_path, mlm)
 
     return filtered_products_path
+
+
+def extract_labelled_point(agb_set, ciqual_to_agb, columns, out_file, product, mlm) -> Tuple[bool, Any]:
+    categories = product.pop("categories_properties")
+    if categories.get("agribalyse_food_code:en") in agb_set:
+        label = categories.get("agribalyse_food_code:en")
+    elif categories.get("ciqual_food_code:en") in ciqual_to_agb:
+        # TODO investigate why this happens
+        label = ciqual_to_agb[categories.get("ciqual_food_code:en")]
+    elif categories.get("agribalyse_proxy_food_code:en") in agb_set:
+        label = categories.get("agribalyse_proxy_food_code:en")
+    else:
+        return False, None
+    if not mlm:
+        filtered_entry = {c: product.get(c) for c in columns}
+        filtered_entry["label"] = label
+        out_file.write(json.dumps(filtered_entry))
+        out_file.write('\n')
+    return True, label
 
 
 def prepare_inputs_mlm(sample: dict, tokenizer: PreTrainedTokenizerBase, tokenizer_kwargs: dict) -> dict:
