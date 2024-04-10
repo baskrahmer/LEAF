@@ -1,5 +1,3 @@
-from typing import Tuple, List, Optional, Set
-
 import lightning
 import numpy as np
 import torch
@@ -9,6 +7,7 @@ from torchmetrics import Accuracy, F1Score, MeanAbsoluteError, MeanSquaredError
 from torchmetrics.text import Perplexity
 from transformers import AutoTokenizer, AutoModel, get_linear_schedule_with_warmup
 from transformers import PreTrainedTokenizerBase, PreTrainedModel
+from typing import Tuple, List, Optional, Set
 
 from src.config import Config
 
@@ -132,11 +131,14 @@ class LightningWrapper(lightning.LightningModule):
         self.test_batch_size = c.test_batch_size
         self.loss_fn = torch.nn.CrossEntropyLoss(ignore_index=self.tokenizer.pad_token_id)
 
-        def make_filter(key, value):
+        def make_lang_filter(key, value):
             return lambda x: np.array(x[key]) == value
 
-        language_filters = {l: make_filter("lang", l) for l in languages}
-        class_filters = {c: make_filter("classes", c) for c in classes}
+        def make_class_filter(key, value):
+            return lambda x: x[key].cpu().numpy() == value
+
+        language_filters = {l: make_lang_filter("lang", l) for l in languages}
+        class_filters = {c: make_class_filter("classes", c) for c in classes}
         self.metric_filters = language_filters | class_filters | {"all": lambda x: [True] * len(x["lang"])}
 
         self.train_metrics = {}
