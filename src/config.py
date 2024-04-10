@@ -18,6 +18,7 @@ class Config:
     data_analysis: bool = False
     ciqual_filename: str = "ciqual.csv"
     products_filename: str = "products.jsonl"
+    drop_singular_classes: bool = True
 
     # Model and generic training
     model_name: str = "hf-internal-testing/tiny-random-bert"
