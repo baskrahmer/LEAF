@@ -1,3 +1,5 @@
+from typing import Tuple, List, Optional, Set
+
 import lightning
 import numpy as np
 import torch
@@ -7,7 +9,6 @@ from torchmetrics import Accuracy, F1Score, MeanAbsoluteError, MeanSquaredError
 from torchmetrics.text import Perplexity
 from transformers import AutoTokenizer, AutoModel, get_linear_schedule_with_warmup
 from transformers import PreTrainedTokenizerBase, PreTrainedModel
-from typing import Tuple, List, Optional, Set
 
 from src.config import Config
 
@@ -122,6 +123,8 @@ class LightningWrapper(lightning.LightningModule):
         super().__init__()
         self.model = model
         self.tokenizer = tokenizer
+        self.classes = classes
+        self.languages = languages
 
         self._device = "cuda" if (c.use_gpu and torch.cuda.is_available()) else "cpu"
 
@@ -187,11 +190,27 @@ class LightningWrapper(lightning.LightningModule):
             self.log(f"{data_split}_{metric_key}", value=value, on_step=data_split == "train", on_epoch=True,
                      prog_bar=True,
                      batch_size=self.train_batch_size if data_split == "train" else self.test_batch_size)
+        self.macro_average_metrics(metrics, data_split)
 
     @staticmethod
     def clear_metrics(metrics: dict[str, torch.nn.Module]):
         for metric_key, metric in metrics.items():
             metric.reset()
+
+    def macro_average_metrics(self, metrics: dict[str, torch.nn.Module], data_split: str) -> dict[str, float]:
+        macro_averages = {}
+        for metric_key, metric in metrics.items():
+            identifier = metric_key.split("_")[0]
+            base_metric = "_".join(metric_key.split("_")[1:])
+            if identifier in self.languages:
+                macro_key = f"lang_{base_metric}"
+            elif identifier in self.classes:
+                macro_key = f"class_{base_metric}"
+            else:
+                continue
+            macro_averages[macro_key] = macro_averages.get(macro_key, []) + [metric.compute()]
+        for key, values in macro_averages.items():
+            self.log(f"{data_split}_{key}", np.mean(values), on_step=True, on_epoch=True, prog_bar=True)
 
     def training_step(self, batch: dict):
         outputs = self.forward(batch)
