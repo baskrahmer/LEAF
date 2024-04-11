@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 
 import torch
@@ -41,6 +42,8 @@ def train(c: Config, dataset: DatasetDict, base_model: Optional[PreTrainedModel]
 
     if mlm:
         base_model = AutoModelForMaskedLM.from_pretrained(c.model_name)
+        if c.mlm_model_path:
+            base_model.load_state_dict(torch.load(c.mlm_model_path))
     else:
         base_model = LEAFModel(c, num_classes=len(class_to_idx.keys()), base_model=base_model,
                                idx_to_co2e=idx_to_co2e)
@@ -81,7 +84,9 @@ def train(c: Config, dataset: DatasetDict, base_model: Optional[PreTrainedModel]
     del lightning_model
 
     if c.save_path:
-        with open(c.save_path + f"model{'_mlm' if mlm else ''}.pt", "wb") as f:
+        run_dir = os.path.join(c.save_path, c.version)
+        model_filename = f"model{'_mlm' if mlm else ''}.pt"
+        with open(os.path.join(run_dir, model_filename), "wb") as f:
             torch.save(base_model.state_dict(), f)
         tokenizer.save_pretrained(c.save_path)
 

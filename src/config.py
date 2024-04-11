@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Literal
 
+
 @dataclass
 class Config:
     seed: int = 42
@@ -34,6 +35,7 @@ class Config:
     es_delta: float = 0.0
 
     # MLM settings
+    mlm_model_path: str = ""  # Path to .pt file
     mlm_train_steps: int = 0
     mlm_val_steps: int = 5
     mlm_learning_rate: float = 1e-5
