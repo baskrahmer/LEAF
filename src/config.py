@@ -45,6 +45,7 @@ class Config:
     train_steps: int = 10
     val_steps: int = 5
     learning_rate: float = 1e-5
+    score_metric: Literal["macro-perplexity", "macro-mae"] = "macro-mae"
 
     # Artefact settings
     save_path: str = "output"

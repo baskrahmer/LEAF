@@ -1,5 +1,5 @@
 import os
-from typing import Optional
+from typing import Optional, Any
 
 import torch
 from datasets import DatasetDict
@@ -14,7 +14,8 @@ from src.utils import get_loggers, get_callbacks, get_collate_fn, get_mlm_collat
     get_ciqual_mapping
 
 
-def train(c: Config, dataset: DatasetDict, base_model: Optional[PreTrainedModel], mlm: bool = False) -> PreTrainedModel:
+def train(c: Config, dataset: DatasetDict, base_model: Optional[PreTrainedModel], mlm: bool = False) \
+        -> tuple[LEAFModel, Any]:
     seed_everything(c.seed, workers=True)
 
     tokenizer, tokenizer_kwargs = get_tokenizer(c)
@@ -77,10 +78,10 @@ def train(c: Config, dataset: DatasetDict, base_model: Optional[PreTrainedModel]
         val_dataloaders=val_dataloader,
     )
 
-    trainer.test(
+    report = trainer.test(
         dataloaders=val_dataloader,
         ckpt_path='best',
-    )
+    )[0]
     del lightning_model
 
     if c.save_path:
@@ -94,4 +95,4 @@ def train(c: Config, dataset: DatasetDict, base_model: Optional[PreTrainedModel]
         base_model.push_to_hub(c.hub_repo_id)
         tokenizer.push_to_hub(c.hub_repo_id)
 
-    return base_model
+    return base_model, report

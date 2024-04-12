@@ -6,15 +6,19 @@ from src.preprocess import filter_data
 from src.train import train
 
 
-def main(c: Config):
+def main(c: Config) -> float:
     dataset = get_dataset(c, filter_data(c), c.test_size)
     if c.mlm_train_steps:
         data_path = filter_data(c, mlm=True)
         mlm_dataset = get_dataset(c, data_path, c.test_size, cls_dataset=dataset)
-        model = train(c, dataset=mlm_dataset, base_model=None, mlm=True) if c.mlm_train_steps else None
+        model, report = train(c, dataset=mlm_dataset, base_model=None, mlm=True) if c.mlm_train_steps else None
+        if c.score_metric == "macro-perplexity":
+            return report["test_lang_perplexity_epoch"]
     else:
         model = None
-    model = train(c, dataset=dataset, base_model=model) if c.train_steps else None
+    model, report = train(c, dataset=dataset, base_model=model) if c.train_steps else None
+    if c.score_metric == "macro-mae":
+        return report["test_lang_mae_epoch"]
 
 
 if __name__ == "__main__":
