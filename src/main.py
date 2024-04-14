@@ -13,12 +13,12 @@ def main(c: Config) -> float:
         mlm_dataset = get_dataset(c, data_path, c.test_size, cls_dataset=dataset)
         model, report = train(c, dataset=mlm_dataset, base_model=None, mlm=True) if c.mlm_train_steps else None
         if c.score_metric == "macro-perplexity":
-            return report["test_lang_perplexity_epoch"]
+            return report["test_lang_perplexity"]
     else:
         model = None
     model, report = train(c, dataset=dataset, base_model=model) if c.train_steps else None
     if c.score_metric == "macro-mae":
-        return report["test_lang_mae_epoch"]
+        return report["test_lang_mae"]
 
 
 if __name__ == "__main__":

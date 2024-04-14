@@ -192,7 +192,6 @@ class LightningWrapper(lightning.LightningModule):
             self.log(f"{data_split}_{metric_key}", value=value, on_step=data_split == "train", on_epoch=True,
                      prog_bar=True,
                      batch_size=self.train_batch_size if data_split == "train" else self.test_batch_size)
-        self.macro_average_metrics(metrics, data_split)
 
     @staticmethod
     def clear_metrics(metrics: dict[str, torch.nn.Module]):
@@ -212,7 +211,9 @@ class LightningWrapper(lightning.LightningModule):
                 continue
             macro_averages[macro_key] = macro_averages.get(macro_key, []) + [metric.compute()]
         for key, values in macro_averages.items():
-            self.log(f"{data_split}_{key}", np.mean(values), on_step=True, on_epoch=True, prog_bar=True)
+            self.log(f"{data_split}_{key}", value=torch.tensor(values).mean(),
+                     on_step=False, on_epoch=True, prog_bar=True,
+                     batch_size=self.train_batch_size if data_split == "train" else self.test_batch_size)
 
     def training_step(self, batch: dict):
         outputs = self.forward(batch)
@@ -233,12 +234,15 @@ class LightningWrapper(lightning.LightningModule):
         return outputs["loss"]
 
     def on_train_epoch_end(self) -> None:
+        self.macro_average_metrics(self.train_metrics, "train")
         self.clear_metrics(self.train_metrics)
 
     def on_validation_epoch_end(self) -> None:
+        self.macro_average_metrics(self.val_metrics, "val")
         self.clear_metrics(self.val_metrics)
 
     def on_test_epoch_end(self) -> None:
+        self.macro_average_metrics(self.test_metrics, "test")
         self.clear_metrics(self.test_metrics)
 
     def forward(self, batch: dict) -> dict:
