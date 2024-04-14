@@ -161,7 +161,7 @@ class LightningWrapper(lightning.LightningModule):
     def get_metric_dict(self, c: Config, split: str, num_classes: int, objective: str) -> dict[str, torch.nn.Module]:
         metric_dict = {}
         if objective == "mlm":
-            metric_dict[f"{split}_perplexity"] = Perplexity().to(self._device)
+            metric_dict[f"{split}_perplexity"] = Perplexity(ignore_index=self.tokenizer.pad_token_id).to(self._device)
         else:
             metric_dict[f"{split}_mae"] = MeanAbsoluteError().to(self._device)
             metric_dict[f"{split}_mse"] = MeanSquaredError().to(self._device)
