@@ -1,3 +1,4 @@
+import math
 from collections import Counter
 from typing import Optional
 
@@ -25,7 +26,8 @@ def get_dataset(c: Config, data_path: str, test_size: float, cls_dataset: Option
     dataset = dataset.class_encode_column(column_name)
     if c.drop_singular_classes:
         value_counts = Counter(dataset[column_name])
-        dataset = dataset.filter(lambda x: value_counts[x[column_name]] > (1 // test_size if not c.debug else 1))
+        min_count = math.ceil(1 / test_size) if not c.sample_size else 1
+        dataset = dataset.filter(lambda x: value_counts[x[column_name]] > min_count)
     dataset = dataset.train_test_split(test_size=test_size, stratify_by_column=column_name).remove_columns(column_name)
     if cls_dataset is not None:
         dataset["train"] = concatenate_datasets([dataset["train"], cls_train])
