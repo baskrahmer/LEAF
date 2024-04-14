@@ -253,6 +253,7 @@ class LightningWrapper(lightning.LightningModule):
             params=[p for p in self.trainable_parameters],
             lr=self.learning_rate,
             betas=(0.9, 0.999),
+            weight_decay=0.01,
         )
         scheduler = get_linear_schedule_with_warmup(
             optimizer=optimizer,
