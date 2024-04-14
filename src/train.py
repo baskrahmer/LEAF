@@ -55,7 +55,8 @@ def train(c: Config, dataset: DatasetDict, base_model: Optional[PreTrainedModel]
         num_classes=len(class_to_idx.keys()),
         mlm=mlm,
         languages=set(train_ds.unique("lang") + val_ds.unique("lang")),
-        classes=set(train_ds.unique("label") + val_ds.unique("label")) if not mlm else set())
+        classes=set(train_ds.unique("label") + val_ds.unique("label")) if not mlm else set(),
+    )
 
     trainer = Trainer(
         accelerator="auto" if (torch.cuda.is_available() and c.use_gpu) else "cpu",
