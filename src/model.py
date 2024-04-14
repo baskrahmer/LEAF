@@ -126,6 +126,8 @@ class LightningWrapper(lightning.LightningModule):
         self.classes = classes
         self.languages = languages
 
+        self.trainable_parameters = self.model.parameters() if mlm else self.model.head.parameters()
+
         self._device = "cuda" if (c.use_gpu and torch.cuda.is_available()) else "cpu"
 
         self.learning_rate = c.learning_rate
@@ -244,7 +246,7 @@ class LightningWrapper(lightning.LightningModule):
 
     def configure_optimizers(self) -> Tuple[List[torch.optim.Optimizer], List[dict]]:
         optimizer = torch.optim.AdamW(
-            params=[p for p in self.model.parameters()],
+            params=[p for p in self.trainable_parameters],
             lr=self.learning_rate,
             betas=(0.9, 0.999),
         )
