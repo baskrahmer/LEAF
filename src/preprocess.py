@@ -84,7 +84,6 @@ def extract_labelled_point(agb_set, ciqual_to_agb, columns, out_file, product, m
     if categories.get("agribalyse_food_code:en") in agb_set:
         label = categories.get("agribalyse_food_code:en")
     elif categories.get("ciqual_food_code:en") in ciqual_to_agb:
-        # TODO investigate why this happens
         label = ciqual_to_agb[categories.get("ciqual_food_code:en")]
     elif categories.get("agribalyse_proxy_food_code:en") in agb_set:
         label = categories.get("agribalyse_proxy_food_code:en")
