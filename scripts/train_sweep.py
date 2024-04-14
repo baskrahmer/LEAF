@@ -1,6 +1,6 @@
 import numpy as np
-
 import wandb
+
 from src.config import Config
 from src.main import main
 
@@ -22,10 +22,11 @@ def wrapped_main():
     wandb.init(project="leaf")
     c = Config(
         use_wandb=True,
-        sample_size=10000,
+        sample_size=0,
         model_name="distilbert/distilbert-base-multilingual-cased",
-        train_steps=1000,
-        val_steps=100,
+        train_steps=100000,
+        val_steps=1000,
+        data_analysis=True,
         learning_rate=wandb.config.learning_rate,
         train_batch_size=wandb.config.batch_size,
         objective=wandb.config.objective,
