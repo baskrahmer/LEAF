@@ -26,7 +26,7 @@ class Config:
     objective: Literal["classification", "regression", "hybrid"] = "hybrid"
     alpha: float = 0.5  # Only used for hybrid head
     fp16: bool = False
-    max_length: int = 512
+    max_length: int = 32
     train_batch_size: int = 64
     test_batch_size: int = 64
     accumulate_grad_batches: int = 1
