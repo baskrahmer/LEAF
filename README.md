@@ -1,4 +1,4 @@
-# LEAF: **L**inguistic **E**nvironmental **A**nalysis of **F**ood products
+# LEAF: **L**inguistic **E**missions **A**nalysis of **F**ood products
 
 ### TODO
 
