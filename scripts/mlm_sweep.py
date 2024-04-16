@@ -27,7 +27,7 @@ def wrapped_main():
         data_analysis=True,
         learning_rate=wandb.config.learning_rate,
         train_batch_size=wandb.config.batch_size,
-        score_metric="macro-perplexity",
+        score_metric="test-perplexity",
     )
     score = main(c)
     wandb.log({"score": score})

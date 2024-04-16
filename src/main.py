@@ -16,14 +16,12 @@ def run(c: Config) -> float:
         data_path = filter_data(c, mlm=True)
         mlm_dataset = get_dataset(c, data_path, c.test_size, cls_dataset=dataset)
         model, report = train(c, dataset=mlm_dataset, base_model=None, mlm=True) if c.mlm_train_steps else None
-        if c.score_metric == "macro-perplexity":
-            return report["test_lang_perplexity"]
+        if c.mlm_score_metric:
+            return report[c.score_metric]
     else:
         model = None
     model, report = train(c, dataset=dataset, base_model=model) if c.train_steps else None
-    if c.score_metric == "macro-mae":
-        return report["test_lang_mae"]
-    return -1
+    return report[c.score_metric]
 
 
 def init_run(c: Config) -> float:
