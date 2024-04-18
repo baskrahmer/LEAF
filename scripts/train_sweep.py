@@ -23,15 +23,15 @@ def wrapped_main():
     c = Config(
         use_wandb=True,
         sample_size=0,
-        model_name="distilbert/distilbert-base-multilingual-cased",
+        model_name="sentence-transformers/distiluse-base-multilingual-cased-v2",
         train_steps=100000,
-        val_steps=1000,
+        val_steps=5000,
         data_analysis=True,
         learning_rate=wandb.config.learning_rate,
         train_batch_size=wandb.config.batch_size,
         objective=wandb.config.objective,
         mlm_model_path=wandb.config.mlm_model_path,
-        score_metric="test-mae",
+        score_metric="test_mae",
     )
     score = main(c)
     wandb.log({"score": score})

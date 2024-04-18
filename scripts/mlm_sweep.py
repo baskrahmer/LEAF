@@ -8,8 +8,8 @@ sweep_configuration = {
     "method": "grid",
     "metric": {"goal": "minimize", "name": "score"},
     "parameters": {
-        "learning_rate": {"values": [0.001, 0.005, 0.0001, 0.0005, 0.00001]},
-        "batch_size": {"values": [64, 128, 256]},
+        "learning_rate": {"values": [1e-4, 5e-4, 1e-5, 5e-5]},
+        "accumulate_grad_batches": {"values": [1, 2, 4]},
     },
 }
 n_runs = np.prod([len(v["values"]) for v in sweep_configuration["parameters"].values()])
@@ -21,13 +21,16 @@ def wrapped_main():
     c = Config(
         use_wandb=True,
         sample_size=0,
-        model_name="distilbert/distilbert-base-multilingual-cased",
+        model_name="sentence-transformers/distiluse-base-multilingual-cased-v2",
         mlm_train_steps=100000,
-        mlm_val_steps=1000,
+        mlm_val_steps=5000,
         data_analysis=True,
         learning_rate=wandb.config.learning_rate,
-        train_batch_size=wandb.config.batch_size,
-        score_metric="test-perplexity",
+        accumulate_grad_batches=wandb.config.accumulate_grad_batches,
+        train_batch_size=64,
+        test_batch_size=128,
+        mlm_score_metric=True,
+        score_metric="test_all_perplexity",
     )
     score = main(c)
     wandb.log({"score": score})
