@@ -31,7 +31,7 @@ def wrapped_main():
         train_batch_size=wandb.config.batch_size,
         objective=wandb.config.objective,
         mlm_model_path=wandb.config.mlm_model_path,
-        score_metric="test_mae",
+        score_metric="test_all_mae",
     )
     score = main(c)
     wandb.log({"score": score})
