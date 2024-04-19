@@ -8,7 +8,7 @@ sweep_configuration = {
     "method": "grid",
     "metric": {"goal": "minimize", "name": "score"},
     "parameters": {
-        "learning_rate": {"values": [0.01, 0.001, 0.0001, 0.00001]},
+        "learning_rate": {"values": [0.01, 0.05, 0.001, 0.005]},
         "batch_size": {"values": [64, 128, 256]},
         "objective": {"values": ["classification", "regression", "hybrid"]},
         "mlm_model_path": {"values": ["", "mlm_model.pt"]},  # TODO: add valid path once MLM sweep is done
