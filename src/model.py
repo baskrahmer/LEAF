@@ -97,6 +97,10 @@ class LEAFModel(nn.Module):
             if len(result.unexpected_keys) == len(base_model.state_dict()):
                 raise ValueError("No weights were transferred from the base model to the new model.")
 
+        # Freeze the base model
+        for param in self.base_model.parameters():
+            param.requires_grad = False
+
         hidden_dim = self.base_model.config.hidden_size
         if c.objective == "classification":
             self.head = ClassificationHead(hidden_dim=hidden_dim, num_classes=num_classes, idx_to_co2e=idx_to_co2e)
