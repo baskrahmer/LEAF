@@ -38,21 +38,21 @@ class ClassificationHead(nn.Module):
     Model head to predict a categorical target variable.
     """
 
-    def __init__(self, hidden_dim: int, num_classes: int, idx_to_co2e: dict):
+    def __init__(self, hidden_dim: int, num_classes: int, idx_to_co2e: dict, device: str):
         super().__init__()
         self.linear = nn.Linear(in_features=hidden_dim, out_features=num_classes)
         self.loss = nn.CrossEntropyLoss()
 
         # Turn dict into lookup table
-        self.idx_to_co2e = idx_to_co2e
+        self.idx_to_co2e = torch.Tensor([idx_to_co2e[k] for k in sorted(idx_to_co2e.keys())]).to(device)
+        self.idx_to_co2e.requires_grad = False
 
     def __call__(self, activations, classes, **kwargs) -> dict:
         logits = self.linear(activations)
         loss = self.loss(logits, classes)
         _, predicted_classes = torch.max(F.softmax(logits, dim=1), dim=1)
-        predicted_classes = predicted_classes.cpu().numpy()
         return {
-            "predicted_values": torch.tensor([self.idx_to_co2e[p] for p in predicted_classes]).unsqueeze(-1),
+            "predicted_values": self.idx_to_co2e[predicted_classes].unsqueeze(-1),
             "logits": logits,
             "loss": loss,
         }
@@ -89,6 +89,7 @@ class LEAFModel(nn.Module):
                  idx_to_co2e: Optional[dict] = None):
         super().__init__()
         self.base_model = AutoModel.from_pretrained(c.model_name)
+        self._device = "cuda" if (c.use_gpu and torch.cuda.is_available()) else "cpu"
 
         # Transfer pretrained model weights to the new model
         if base_model is not None:
@@ -103,7 +104,8 @@ class LEAFModel(nn.Module):
 
         hidden_dim = self.base_model.config.hidden_size
         if c.objective == "classification":
-            self.head = ClassificationHead(hidden_dim=hidden_dim, num_classes=num_classes, idx_to_co2e=idx_to_co2e)
+            self.head = ClassificationHead(hidden_dim=hidden_dim, num_classes=num_classes, idx_to_co2e=idx_to_co2e,
+                                           device=self._device)
         elif c.objective == "regression":
             self.head = RegressionHead(hidden_dim=hidden_dim)
         elif c.objective == "hybrid":
