@@ -11,7 +11,7 @@ sweep_configuration = {
         "learning_rate": {"values": [0.01, 0.05, 0.001, 0.005]},
         "batch_size": {"values": [64, 128, 256]},
         "objective": {"values": ["classification", "regression", "hybrid"]},
-        "mlm_model_path": {"values": ["", "mlm_model.pt"]},  # TODO: add valid path once MLM sweep is done
+        "mlm_model_path": {"values": [""]},  # TODO: add valid path once MLM sweep is done
     },
 }
 n_runs = np.prod([len(v["values"]) for v in sweep_configuration["parameters"].values()])
