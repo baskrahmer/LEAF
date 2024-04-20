@@ -50,8 +50,9 @@ class ClassificationHead(nn.Module):
         logits = self.linear(activations)
         loss = self.loss(logits, classes)
         _, predicted_classes = torch.max(F.softmax(logits, dim=1), dim=1)
+        predicted_classes = predicted_classes.cpu().numpy()
         return {
-            "predicted_values": torch.tensor([self.idx_to_co2e[p] for p in predicted_classes.numpy()]).unsqueeze(-1),
+            "predicted_values": torch.tensor([self.idx_to_co2e[p] for p in predicted_classes]).unsqueeze(-1),
             "logits": logits,
             "loss": loss,
         }
@@ -190,7 +191,7 @@ class LightningWrapper(lightning.LightningModule):
                 regressands = batch['regressands'][filter_idx]
                 value = metric(preds=pred_values, target=regressands)
             self.log(f"{data_split}_{metric_key}", value=value, on_step=data_split == "train", on_epoch=True,
-                     prog_bar=True,
+                     prog_bar="all" in metric_key,
                      batch_size=self.train_batch_size if data_split == "train" else self.test_batch_size)
 
     @staticmethod
