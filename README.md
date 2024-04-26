@@ -17,8 +17,8 @@
     - [x] Classification model
     - [x] Regression model
     - [x] Hybrid model
-    - [ ] Baseline models
-        - [ ] Cosine similarity with LCI name
+    - [x] Baseline models
+        - [x] Cosine similarity with LCI name
         - [x] Zero-shot autoregressive LLM
 - [x] Training pipeline
 - [x] Class imbalances
