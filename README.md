@@ -19,7 +19,7 @@
     - [x] Hybrid model
     - [ ] Baseline models
         - [ ] Cosine similarity with LCI name
-        - [ ] Zero-shot autoregressive LLM
+        - [x] Zero-shot autoregressive LLM
 - [x] Training pipeline
 - [x] Class imbalances
     - [x] Train/test splits balanced by language and class
