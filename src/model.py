@@ -69,12 +69,13 @@ class HybridHead(nn.Module):
         self.regression_linear = nn.Linear(in_features=num_classes, out_features=1)
         self.regression_loss = nn.MSELoss()
         self.classification_loss = nn.CrossEntropyLoss()
+        self.activation = nn.Softplus()
         self.alpha = alpha
 
     def __call__(self, activations, classes, regressands, **kwargs) -> dict:
         logits = self.classification_linear(activations)
         classification_loss = self.classification_loss(logits, classes)
-        predicted_values = self.regression_linear(logits)
+        predicted_values = self.activation(self.regression_linear(logits))
         regression_loss = self.regression_loss(predicted_values, regressands)
         return {
             "predicted_values": predicted_values,
