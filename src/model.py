@@ -206,7 +206,7 @@ class LightningWrapper(lightning.LightningModule):
         for metric_key, metric in metrics.items():
             metric.reset()
 
-    def macro_average_metrics(self, metrics: dict[str, torch.nn.Module], data_split: str) -> dict[str, float]:
+    def macro_average_metrics(self, metrics: dict[str, torch.nn.Module], data_split: str):
         macro_averages = {}
         for metric_key, metric in metrics.items():
             identifier = metric_key.split("_")[0]
