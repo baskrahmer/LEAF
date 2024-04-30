@@ -1,14 +1,15 @@
 import os
+from typing import Any
+from typing import List
+
 import torch
 from lightning import pytorch as pl
 from lightning.pytorch.loggers import CSVLogger, WandbLogger
 from transformers import DataCollatorForLanguageModeling, DataCollatorWithPadding
 from transformers import PreTrainedTokenizerBase
-from typing import Any
-from typing import List
 
 from src.config import Config
-from src.preprocess import get_ciqual_data
+from src.data import get_ciqual_data
 
 
 def get_loggers(c: Config):
@@ -79,3 +80,8 @@ def get_ciqual_mapping(c: Config):
     ciqual_data = get_ciqual_data(c)
     class_to_co2e = {str(c): co2 for c, co2 in zip(ciqual_data["Code AGB"], ciqual_data["Score unique EF"])}  # TODO
     return class_to_co2e
+
+
+def get_lci_name_mapping(c: Config):
+    ciqual_data = get_ciqual_data(c)
+    return {str(c): co2 for c, co2 in zip(ciqual_data["Code AGB"], ciqual_data["LCI Name"])}

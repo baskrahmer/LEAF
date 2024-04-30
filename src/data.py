@@ -1,7 +1,9 @@
 import math
+import os
 from collections import Counter
 from typing import Optional
 
+import pandas as pd
 from datasets import DatasetDict
 from datasets import load_dataset, concatenate_datasets
 
@@ -33,3 +35,10 @@ def get_dataset(c: Config, data_path: str, test_size: float, cls_dataset: Option
         dataset["train"] = concatenate_datasets([dataset["train"], cls_train])
         dataset["test"] = concatenate_datasets([dataset["test"], cls_test])
     return dataset
+
+
+def get_ciqual_data(c: Config):
+    # TODO deduplicate this with other CIQUAL loading logic
+    data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
+    ciqual_path = os.path.join(data_dir, c.ciqual_filename)
+    return pd.read_csv(ciqual_path)

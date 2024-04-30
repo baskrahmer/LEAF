@@ -2,11 +2,11 @@ import json
 import os
 from typing import Tuple, Any
 
-import pandas as pd
 from tqdm import tqdm
 from transformers import PreTrainedTokenizerBase
 
 from src.config import Config
+from src.data import get_ciqual_data
 from src.plot import make_data_analysis_report
 
 
@@ -27,7 +27,7 @@ def filter_data(c: Config, mlm: bool = False) -> str:
     if c.cache_data and os.path.exists(filtered_products_path):
         return filtered_products_path
 
-    ciqual_data = pd.read_csv(ciqual_path)
+    ciqual_data = get_ciqual_data(c)
     ciqual_to_agb = {str(c): str(a) for c, a in zip(ciqual_data["Code CIQUAL"], ciqual_data["Code AGB"])}
     agb_set = set(ciqual_data["Code AGB"])
     del ciqual_data
@@ -73,8 +73,7 @@ def filter_data(c: Config, mlm: bool = False) -> str:
                 break
 
     if c.data_analysis:
-        make_data_analysis_report(c, ciqual_path, lang_frequencies, label_frequencies, lang_label_frequencies,
-                                  output_path, mlm)
+        make_data_analysis_report(c, lang_frequencies, label_frequencies, lang_label_frequencies, output_path, mlm)
 
     return filtered_products_path
 
@@ -114,10 +113,3 @@ def prepare_inputs(sample: dict, tokenizer: PreTrainedTokenizerBase, tokenizer_k
     sample['regressands'] = class_to_co2e[sample['label']]
     sample['classes'] = class_to_idx[sample['label']]
     return sample
-
-
-def get_ciqual_data(c: Config):
-    # TODO deduplicate this with other CIQUAL loading logic
-    data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
-    ciqual_path = os.path.join(data_dir, c.ciqual_filename)
-    return pd.read_csv(ciqual_path)

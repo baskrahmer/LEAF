@@ -8,26 +8,7 @@ import pandas as pd
 import seaborn as sns
 
 from src.config import Config
-
-
-def plot_ciqual_distribution(ciqual_path):
-    footprint_scores = pd.read_csv(ciqual_path)["Score unique EF"]
-    num_bins = 10
-    plt.hist(footprint_scores, bins=num_bins, edgecolor='black')
-
-    # Adding labels and title
-    plt.xlabel('Value')
-    plt.ylabel('Frequency')
-    plt.title('Co2e distribution')
-    bins = np.linspace(min(footprint_scores), max(footprint_scores), num_bins + 1)
-    ticks = [(bins[i] + bins[i + 1]) / 2 for i in range(num_bins)]
-    formatter = ticker.FormatStrFormatter('%.2f')
-    plt.gca().xaxis.set_major_formatter(formatter)
-    plt.xticks(ticks)
-    plt.yscale("log")
-
-    # Displaying the plot
-    plt.show()
+from src.data import get_ciqual_data
 
 
 def plot_lang_label_frequencies(lang_label_frequencies):
@@ -81,17 +62,8 @@ def plot_lang_label_frequencies(lang_label_frequencies):
         plt.show()
 
 
-def make_data_analysis_report(c: Config, ciqual_path: str, lang_frequencies: dict, label_frequencies: dict,
-                              lang_label_frequencies: dict, output_path: str):
-    plot_ciqual_distribution(ciqual_path)
-    plot_lang_label_frequencies(lang_label_frequencies)
-
-
-from src.config import Config
-
-
-def plot_ciqual_distribution(ciqual_path, save_path):
-    footprint_scores = pd.read_csv(ciqual_path)["Score unique EF"]
+def plot_ciqual_distribution(c: Config, save_path: str):
+    footprint_scores = get_ciqual_data(c)["Score unique EF"]
     num_bins = 10
     plt.hist(footprint_scores, bins=num_bins, edgecolor='black')
 
@@ -171,8 +143,8 @@ def save_dict_to_json(data, save_path, filename):
         json.dump(data, f)
 
 
-def make_data_analysis_report(c: Config, ciqual_path: str, lang_frequencies: dict, label_frequencies: dict,
-                              lang_label_frequencies: dict, output_path: str, mlm: bool):
+def make_data_analysis_report(c: Config, lang_frequencies: dict, label_frequencies: dict, lang_label_frequencies: dict,
+                              output_path: str, mlm: bool):
     # Ensure the save directory exists
     os.makedirs(output_path, exist_ok=True)
 
@@ -183,5 +155,5 @@ def make_data_analysis_report(c: Config, ciqual_path: str, lang_frequencies: dic
         save_dict_to_json(lang_label_frequencies, output_path, 'lang_label_frequencies.json')
 
         # Plotting and saving plots
-        plot_ciqual_distribution(ciqual_path, output_path)
+        plot_ciqual_distribution(c, output_path)
         plot_lang_label_frequencies(lang_label_frequencies, output_path)
