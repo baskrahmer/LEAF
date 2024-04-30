@@ -46,7 +46,7 @@ class Config:
     train_steps: int = 10
     val_steps: int = 5
     learning_rate: float = 1e-5
-    mlm_score_metric: bool = True
+    mlm_score_metric: bool = False
     score_metric: str = "test-mae"
 
     # Artefact settings
