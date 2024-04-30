@@ -23,13 +23,18 @@
 - [x] Training pipeline
 - [x] Class imbalances
     - [x] Train/test splits balanced by language and class
-    - [ ] Language and class weights in loss function
 - [x] Evaluation pipeline
     - [x] Split across products
     - [x] Split across languages
     - [x] Classification metrics (accuracy, F1)
     - [x] Regression metrics (MAE)
+- [x] Experiments
+    - [x] Grid search
+    - [ ] Learnable alpha
+    - [ ] Pooling mechanisms
+    - [x] Longer training runs
+- [ ] Upload to HuggingFace
 - [ ] Streamlit demo
-- [ ] Testing & reproducibility
+- [x] Testing & reproducibility
 - [ ] Documentation
 - [ ] Writeup & submission
