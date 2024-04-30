@@ -86,11 +86,12 @@ class HybridHead(nn.Module):
 
 class LEAFModel(nn.Module):
 
-    def __init__(self, c, num_classes: int, base_model: Optional[PreTrainedModel] = None,
+    def __init__(self, c: Config, num_classes: int, base_model: Optional[PreTrainedModel] = None,
                  idx_to_co2e: Optional[dict] = None):
         super().__init__()
         self.base_model = AutoModel.from_pretrained(c.model_name)
         self._device = "cuda" if (c.use_gpu and torch.cuda.is_available()) else "cpu"
+        self.pooling = c.pooling
 
         # Transfer pretrained model weights to the new model
         if base_model is not None:
@@ -115,8 +116,16 @@ class LEAFModel(nn.Module):
             raise ValueError
 
     def forward(self, input_ids, attention_mask, **kwargs) -> dict:
-        outputs = self.base_model(input_ids=input_ids, attention_mask=attention_mask)
-        return self.head(outputs.last_hidden_state[:, 0], **kwargs)
+        outputs = self.base_model(input_ids=input_ids, attention_mask=attention_mask).last_hidden_state
+        if self.pooling == "cls":
+            return self.head(outputs[:, 0], **kwargs)
+        elif self.pooling == "mean":
+            attention_mask = attention_mask.unsqueeze(-1)
+            masked_outputs = outputs * attention_mask.type_as(outputs)
+            nom = masked_outputs.sum(dim=1)
+            denom = attention_mask.sum(dim=1)
+            denom = denom.masked_fill(denom == 0, 1)
+            return self.head(nom / denom, **kwargs)
 
 
 class LightningWrapper(lightning.LightningModule):

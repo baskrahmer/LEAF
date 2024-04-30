@@ -24,6 +24,7 @@ class Config:
     # Model and generic training
     model_name: str = "hf-internal-testing/tiny-random-bert"
     objective: Literal["classification", "regression", "hybrid"] = "hybrid"
+    pooling: Literal["mean", "cls"] = "cls"
     alpha: float = 0.5  # Only used for hybrid head
     fp16: bool = False
     max_length: int = 32
