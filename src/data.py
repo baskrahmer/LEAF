@@ -20,7 +20,7 @@ def get_dataset(c: Config, data_path: str, test_size: float, cls_dataset: Option
         cls_train = cls_dataset["train"].remove_columns("label")
         cls_test = cls_dataset["test"].remove_columns("label")
     column_name = "stratification_column"
-    if cls_dataset is not None:
+    if cls_dataset is not None or not c.drop_singular_classes:
         map_fn = lambda x: {column_name: x['lang']}
     else:
         map_fn = lambda x: {column_name: f"{x['lang']}_{x['label']}"}
