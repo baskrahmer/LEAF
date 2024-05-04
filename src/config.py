@@ -11,6 +11,7 @@ class Config:
     use_wandb: bool = False
     use_gpu: bool = True
     num_workers: int = 7
+    experiment_name: Optional[str] = None
 
     # Data settings
     sample_size: int = 20

@@ -15,7 +15,8 @@ from src.data import get_ciqual_data
 def get_loggers(c: Config):
     loggers = [CSVLogger(save_dir=c.save_path, name=c.version)]
     if c.use_wandb:
-        loggers.append(WandbLogger(name=c.version, save_dir=c.save_path, version=c.version, project="leaf"))
+        version = f"{(c.experiment_name + '_') if c.experiment_name else ''}{c.version}"
+        loggers.append(WandbLogger(name=version, save_dir=c.save_path, version=version, project="leaf"))
     return loggers
 
 
