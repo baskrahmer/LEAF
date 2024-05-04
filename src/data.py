@@ -42,7 +42,6 @@ def get_dataset(c: Config, data_path: str, test_size: float, cls_dataset: Option
 
 
 def get_ciqual_data(c: Config):
-    # TODO deduplicate this with other CIQUAL loading logic
     data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
     ciqual_path = os.path.join(data_dir, c.ciqual_filename)
     return pd.read_csv(ciqual_path)
