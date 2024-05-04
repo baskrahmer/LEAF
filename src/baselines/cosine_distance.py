@@ -16,6 +16,7 @@ from src.utils import get_lci_name_mapping
 
 class CosineBaseline:
 
+    @torch.no_grad()
     def __init__(self, c: Config, model_name: str, label_to_lci: dict, pooling_mode: Literal["cls", "mean"] = "mean"):
         self.c = c
         self.pooling_mode = pooling_mode
@@ -40,6 +41,7 @@ class CosineBaseline:
         self.label_to_lci = label_to_lci
         self.lci_to_label = {v: k for k, v in label_to_lci.items()}
 
+    @torch.no_grad()
     def __call__(self, input_text: str):
         tokens = self.tokenizer(input_text, return_tensors="pt", padding=True, truncation=True)
         if self.pooling_mode == "cls":
@@ -66,7 +68,7 @@ def main(c: Config, model_name="sentence-transformers/distiluse-base-multilingua
         sample['predicted'] = cosine_classifier(product["product_name"])
         predictions.append(sample)
 
-    with open(f'cosine_preds_{pooling_mode}_pooling.csv', 'w') as csvfile:
+    with open(f'cosine_preds_{pooling_mode}_pooling_{model_name.split("/"[-1])}.csv', 'w') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=predictions[0].keys())
         writer.writeheader()
         writer.writerows(predictions)
@@ -74,8 +76,9 @@ def main(c: Config, model_name="sentence-transformers/distiluse-base-multilingua
 
 if __name__ == "__main__":
     for pooling_mode in ["cls", "mean"]:
-        main(
-            c=Config(sample_size=0),
-            model_name="sentence-transformers/distiluse-base-multilingual-cased-v2",
-            pooling_mode=pooling_mode,
-        )
+        for model_name in ["BAAI/bge-m3", "sentence-transformers/distiluse-base-multilingual-cased-v2"]:
+            main(
+                c=Config(sample_size=0),
+                model_name=model_name,
+                pooling_mode=pooling_mode,
+            )
