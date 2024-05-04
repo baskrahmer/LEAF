@@ -34,6 +34,7 @@ class Config:
     gradient_clipping_value: Optional[float] = 0.1
     es_patience: int = 10
     es_delta: float = 0.0
+    finetune_last_layer: bool = False
 
     # MLM settings
     mlm_model_path: str = ""  # Path to .pt file

@@ -104,6 +104,19 @@ class LEAFModel(nn.Module):
         for param in self.base_model.parameters():
             param.requires_grad = False
 
+        self.finetune_parameters = []
+        if c.finetune_last_layer:
+            prefix_map = {
+                "sentence-transformers/distiluse-base-multilingual-cased-v2": "transformer.layer.5",
+                "BAAI/bge-m3": "encoder.layer.23",
+            }
+            if c.model_name not in prefix_map:
+                raise NotImplementedError("Finetuning last layer only supported for distiluse and bge-m3 models.")
+            for n, p in self.base_model.named_parameters():
+                if n.startswith(prefix_map[c.model_name]):
+                    p.requires_grad = True
+                    self.finetune_parameters.append(p)
+
         hidden_dim = self.base_model.config.hidden_size
         if c.objective == "classification":
             self.head = ClassificationHead(hidden_dim=hidden_dim, num_classes=num_classes, idx_to_co2e=idx_to_co2e,
@@ -266,9 +279,11 @@ class LightningWrapper(lightning.LightningModule):
         return self.model(**{k: v for k, v in batch.items() if k != "lang"})
 
     def configure_optimizers(self) -> Tuple[List[torch.optim.Optimizer], List[dict]]:
+        params = [{"params": self.trainable_parameters, "lr": self.learning_rate / 10}]
+        if self.model.finetune_parameters:
+            params.append({"params": self.model.finetune_parameters, "lr": self.learning_rate / 10})
         optimizer = torch.optim.AdamW(
-            params=[p for p in self.trainable_parameters],
-            lr=self.learning_rate,
+            params=params,
             betas=(0.9, 0.999),
             weight_decay=0.01,
         )
