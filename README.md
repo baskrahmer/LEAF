@@ -33,7 +33,7 @@
     - [ ] Learnable alpha
     - [ ] Pooling mechanisms
     - [x] Longer training runs
-- [ ] Upload to HuggingFace
+- [x] Upload to HuggingFace
 - [ ] Streamlit demo
 - [x] Testing & reproducibility
 - [ ] Documentation

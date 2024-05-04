@@ -54,4 +54,5 @@ class Config:
     # Artefact settings
     save_path: str = "output"
     push_to_hub: bool = False
+    push_ds_to_hub: bool = False
     hub_repo_id: str = ""

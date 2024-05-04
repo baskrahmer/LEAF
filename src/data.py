@@ -36,6 +36,8 @@ def get_dataset(c: Config, data_path: str, test_size: float, cls_dataset: Option
     if cls_dataset is not None:
         dataset["train"] = concatenate_datasets([dataset["train"], cls_train])
         dataset["test"] = concatenate_datasets([dataset["test"], cls_test])
+    if c.push_ds_to_hub and cls_dataset is None:
+        dataset.push_to_hub(c.hub_repo_id)
     return dataset
 
 
