@@ -26,10 +26,12 @@ def get_dataset(c: Config, data_path: str, test_size: float, cls_dataset: Option
         map_fn = lambda x: {column_name: f"{x['lang']}_{x['label']}"}
     dataset = dataset.map(map_fn, num_proc=4)
     dataset = dataset.class_encode_column(column_name)
+    value_counts = Counter(dataset[column_name])
     if c.drop_singular_classes:
-        value_counts = Counter(dataset[column_name])
-        min_count = math.ceil(1 / test_size) if not c.sample_size else 1
-        dataset = dataset.filter(lambda x: value_counts[x[column_name]] > min_count)
+        min_count = math.ceil(1 / test_size) if not c.sample_size else 2
+        dataset = dataset.filter(lambda x: value_counts[x[column_name]] >= min_count)
+    else:  # Map n=1 languages to a single language class
+        dataset = dataset.map(lambda x: {column_name: -1 if value_counts[x[column_name]] == 1 else x[column_name]})
     dataset = dataset.train_test_split(test_size=test_size, stratify_by_column=column_name).remove_columns(column_name)
     if cls_dataset is not None:
         dataset["train"] = concatenate_datasets([dataset["train"], cls_train])
