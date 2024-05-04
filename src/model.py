@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from torch import nn
 from torchmetrics import Accuracy, F1Score, MeanAbsoluteError, MeanSquaredError
 from torchmetrics.text import Perplexity
-from transformers import AutoTokenizer, AutoModel, get_linear_schedule_with_warmup
+from transformers import AutoTokenizer, AutoModel, AutoConfig, get_linear_schedule_with_warmup
 from transformers import PreTrainedTokenizerBase, PreTrainedModel
 
 from src.config import Config
@@ -84,24 +84,24 @@ class HybridHead(nn.Module):
         }
 
 
-class LEAFModel(nn.Module):
+class LEAFModel(PreTrainedModel):
 
     def __init__(self, c: Config, num_classes: int, base_model: Optional[PreTrainedModel] = None,
                  idx_to_co2e: Optional[dict] = None):
-        super().__init__()
-        self.base_model = AutoModel.from_pretrained(c.model_name)
+        super().__init__(AutoConfig.from_pretrained(c.model_name))
+        self._base_model = AutoModel.from_pretrained(c.model_name)
         self._device = "cuda" if (c.use_gpu and torch.cuda.is_available()) else "cpu"
         self.pooling = c.pooling
 
         # Transfer pretrained model weights to the new model
         if base_model is not None:
             transfer_weights = {k.replace("bert.", ""): v for k, v in base_model.state_dict().items()}
-            result = self.base_model.load_state_dict(transfer_weights, strict=False)
+            result = self._base_model.load_state_dict(transfer_weights, strict=False)
             if len(result.unexpected_keys) == len(base_model.state_dict()):
                 raise ValueError("No weights were transferred from the base model to the new model.")
 
         # Freeze the base model
-        for param in self.base_model.parameters():
+        for param in self._base_model.parameters():
             param.requires_grad = False
 
         self.finetune_parameters = []
@@ -112,12 +112,12 @@ class LEAFModel(nn.Module):
             }
             if c.model_name not in prefix_map:
                 raise NotImplementedError("Finetuning last layer only supported for distiluse and bge-m3 models.")
-            for n, p in self.base_model.named_parameters():
+            for n, p in self._base_model.named_parameters():
                 if n.startswith(prefix_map[c.model_name]):
                     p.requires_grad = True
                     self.finetune_parameters.append(p)
 
-        hidden_dim = self.base_model.config.hidden_size
+        hidden_dim = self._base_model.config.hidden_size
         if c.objective == "classification":
             self.head = ClassificationHead(hidden_dim=hidden_dim, num_classes=num_classes, idx_to_co2e=idx_to_co2e,
                                            device=self._device)
@@ -129,7 +129,7 @@ class LEAFModel(nn.Module):
             raise ValueError
 
     def forward(self, input_ids, attention_mask, **kwargs) -> dict:
-        outputs = self.base_model(input_ids=input_ids, attention_mask=attention_mask).last_hidden_state
+        outputs = self._base_model(input_ids=input_ids, attention_mask=attention_mask).last_hidden_state
         if self.pooling == "cls":
             return self.head(outputs[:, 0], **kwargs)
         elif self.pooling == "mean":

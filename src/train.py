@@ -92,7 +92,7 @@ def train(c: Config, dataset: DatasetDict, base_model: Optional[PreTrainedModel]
             torch.save(base_model.state_dict(), f)
         tokenizer.save_pretrained(c.save_path)
 
-    if c.push_to_hub:
+    if c.push_to_hub and not mlm:
         base_model.push_to_hub(c.hub_repo_id)
         tokenizer.push_to_hub(c.hub_repo_id)
 
