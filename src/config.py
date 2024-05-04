@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Optional
 
 
 @dataclass
@@ -31,7 +31,7 @@ class Config:
     train_batch_size: int = 64
     test_batch_size: int = 64
     accumulate_grad_batches: int = 1
-    gradient_clipping_value: float = 0.1
+    gradient_clipping_value: Optional[float] = 0.1
     es_patience: int = 10
     es_delta: float = 0.0
 
