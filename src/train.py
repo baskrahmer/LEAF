@@ -38,7 +38,7 @@ def train(c: Config, dataset: DatasetDict, base_model: Optional[PreTrainedModel]
     train_ds = train_ds.map(map_fn)
     val_ds = val_ds.map(map_fn)
 
-    dl_kwargs = {"collate_fn": collate_fn, "num_workers": c.num_workers}
+    dl_kwargs = {"collate_fn": collate_fn, "num_workers": c.num_workers, "pin_memory": True}
     train_dataloader = DataLoader(train_ds, shuffle=True, batch_size=c.train_batch_size, **dl_kwargs)
     val_dataloader = DataLoader(val_ds, shuffle=False, batch_size=c.test_batch_size, **dl_kwargs)
 
