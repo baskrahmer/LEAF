@@ -2,6 +2,7 @@ import os
 from typing import Optional, Any
 
 import torch
+import wandb
 from datasets import DatasetDict
 from lightning import Trainer, seed_everything
 from torch.utils.data import DataLoader
@@ -95,5 +96,8 @@ def train(c: Config, dataset: DatasetDict, base_model: Optional[PreTrainedModel]
     if c.push_to_hub and not mlm:
         base_model.push_to_hub(c.hub_repo_id)
         tokenizer.push_to_hub(c.hub_repo_id)
+
+    if c.use_wandb:
+        wandb.finish()
 
     return base_model, report
