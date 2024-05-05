@@ -10,7 +10,7 @@ class Config:
     version: str = field(default_factory=lambda: datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
     use_wandb: bool = False
     use_gpu: bool = True
-    num_workers: int = 7
+    num_workers: int = 8
     experiment_name: Optional[str] = None
 
     # Data settings
