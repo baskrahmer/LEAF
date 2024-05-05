@@ -68,7 +68,7 @@ def main(c: Config, model_name="sentence-transformers/distiluse-base-multilingua
         sample['predicted'] = cosine_classifier(product["product_name"])
         predictions.append(sample)
 
-    with open(f'cosine_preds_{pooling_mode}_pooling_{model_name.split("/"[-1])}.csv', 'w') as csvfile:
+    with open(f'cosine_preds_{pooling_mode}_pooling_{model_name.split("/")[-1]}.csv', 'w') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=predictions[0].keys())
         writer.writeheader()
         writer.writerows(predictions)
