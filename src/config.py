@@ -10,7 +10,7 @@ class Config:
     version: str = field(default_factory=lambda: datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
     use_wandb: bool = False
     use_gpu: bool = True
-    num_workers: int = 8
+    num_workers: int = 0
     experiment_name: Optional[str] = None
 
     # Data settings
@@ -25,14 +25,14 @@ class Config:
     # Model and generic training
     model_name: str = "hf-internal-testing/tiny-random-bert"
     objective: Literal["classification", "regression", "hybrid"] = "hybrid"
-    pooling: Literal["mean", "cls"] = "cls"
+    pooling: Literal["mean", "cls"] = "mean"
     alpha: float = 0.5  # Only used for hybrid head
     fp16: bool = False
     max_length: int = 32
     train_batch_size: int = 64
     test_batch_size: int = 64
     accumulate_grad_batches: int = 1
-    gradient_clipping_value: Optional[float] = 0.1
+    gradient_clipping_value: Optional[float] = None
     es_patience: int = 10
     es_delta: float = 0.0
     finetune_last_layer: bool = False
