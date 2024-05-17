@@ -11,6 +11,7 @@
 {"product_name": "La triguena, garlic powder", "lang": "en", "categories_properties": {"agribalyse_food_code:en": "11023", "ciqual_food_code:en": "11023"}, "label": "11023"}
 {"product_name": "Fresh Basil", "lang": "en", "categories_properties": {"agribalyse_food_code:en": "11033", "ciqual_food_code:en": "11033", "agribalyse_proxy_food_code:en": "11033"}, "label": "11033"}
 {"product_name": "Knoblauch granuliert", "lang": "de", "categories_properties": {"agribalyse_food_code:en": "11023", "ciqual_food_code:en": "11023"}, "label": "11023"}
+{"product_name": "Knoblauch", "lang": "de", "categories_properties": {"agribalyse_food_code:en": "11023", "ciqual_food_code:en": "11023"}, "label": "11023"}
 {"product_name": "Ail Semoule", "lang": "fr", "categories_properties": {"agribalyse_food_code:en": "11023", "ciqual_food_code:en": "11023"}, "label": "11023"}
 {"product_name": "fresh basil", "lang": "en", "categories_properties": {"agribalyse_proxy_food_code:en": "11033", "ciqual_food_code:en": "11033", "agribalyse_food_code:en": "11033"}, "label": "11033"}
 {"product_name": "Ail semoule", "lang": "fr", "categories_properties": {"agribalyse_food_code:en": "11023", "agribalyse_proxy_food_code:en": "11000", "ciqual_food_code:en": "11023"}, "label": "11023"}
