@@ -280,7 +280,7 @@ class LightningWrapper(lightning.LightningModule):
 
     def configure_optimizers(self) -> Tuple[List[torch.optim.Optimizer], List[dict]]:
         params = [{"params": self.trainable_parameters, "lr": self.learning_rate / 10}]
-        if self.model.finetune_parameters:
+        if hasattr(self.model, "finetune_parameters"):
             params.append({"params": self.model.finetune_parameters, "lr": self.learning_rate / 10})
         optimizer = torch.optim.AdamW(
             params=params,
