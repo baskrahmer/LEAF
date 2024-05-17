@@ -49,7 +49,7 @@ class Config:
     val_steps: int = 5
     learning_rate: float = 1e-5
     mlm_score_metric: bool = False
-    score_metric: str = "test-mae"
+    score_metric: str = "test_all_mae"
 
     # Artefact settings
     save_path: str = "output"
