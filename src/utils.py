@@ -53,6 +53,9 @@ def get_mlm_collate_fn(tokenizer, mlm_probability):
 
 
 def get_collate_fn(tokenizer: PreTrainedTokenizerBase):
+    """
+    Return a collate function that works for classification and regression tasks.
+    """
     collator = DataCollatorWithPadding(tokenizer=tokenizer, return_tensors='pt', padding=True)
 
     def collate_fn(batch: List[dict[str, Any]]) -> dict[str, Any]:
@@ -79,10 +82,9 @@ def get_class_mapping(train_ds, val_ds):
 
 def get_ciqual_mapping(c: Config):
     ciqual_data = get_ciqual_data(c)
-    class_to_co2e = {str(c): co2 for c, co2 in zip(ciqual_data["Code AGB"], ciqual_data["Score unique EF"])}
-    return class_to_co2e
+    return {str(c): ef for c, ef in zip(ciqual_data["Code AGB"], ciqual_data["Score unique EF"])}
 
 
 def get_lci_name_mapping(c: Config):
     ciqual_data = get_ciqual_data(c)
-    return {str(c): co2 for c, co2 in zip(ciqual_data["Code AGB"], ciqual_data["LCI Name"])}
+    return {str(c): ef for c, ef in zip(ciqual_data["Code AGB"], ciqual_data["LCI Name"])}

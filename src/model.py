@@ -38,21 +38,21 @@ class ClassificationHead(nn.Module):
     Model head to predict a categorical target variable.
     """
 
-    def __init__(self, hidden_dim: int, num_classes: int, idx_to_co2e: dict, device: str):
+    def __init__(self, hidden_dim: int, num_classes: int, idx_to_ef: dict, device: str):
         super().__init__()
         self.linear = nn.Linear(in_features=hidden_dim, out_features=num_classes)
         self.loss = nn.CrossEntropyLoss()
 
         # Turn dict into lookup table
-        self.idx_to_co2e = torch.Tensor([idx_to_co2e[k] for k in sorted(idx_to_co2e.keys())]).to(device)
-        self.idx_to_co2e.requires_grad = False
+        self.idx_to_ef = torch.Tensor([idx_to_ef[k] for k in sorted(idx_to_ef.keys())]).to(device)
+        self.idx_to_ef.requires_grad = False
 
     def __call__(self, activations, classes, **kwargs) -> dict:
         logits = self.linear(activations)
         loss = self.loss(logits, classes)
         _, predicted_classes = torch.max(F.softmax(logits, dim=1), dim=1)
         return {
-            "predicted_values": self.idx_to_co2e[predicted_classes].unsqueeze(-1),
+            "predicted_values": self.idx_to_ef[predicted_classes].unsqueeze(-1),
             "logits": logits,
             "loss": loss,
         }
@@ -87,7 +87,7 @@ class HybridHead(nn.Module):
 class LEAFModel(PreTrainedModel):
 
     def __init__(self, c: Config, num_classes: int, base_model: Optional[PreTrainedModel] = None,
-                 idx_to_co2e: Optional[dict] = None):
+                 idx_to_ef: Optional[dict] = None):
         super().__init__(AutoConfig.from_pretrained(c.model_name))
         self._base_model = AutoModel.from_pretrained(c.model_name)
         self._device = "cuda" if (c.use_gpu and torch.cuda.is_available()) else "cpu"
@@ -119,7 +119,7 @@ class LEAFModel(PreTrainedModel):
 
         hidden_dim = self._base_model.config.hidden_size
         if c.objective == "classification":
-            self.head = ClassificationHead(hidden_dim=hidden_dim, num_classes=num_classes, idx_to_co2e=idx_to_co2e,
+            self.head = ClassificationHead(hidden_dim=hidden_dim, num_classes=num_classes, idx_to_ef=idx_to_ef,
                                            device=self._device)
         elif c.objective == "regression":
             self.head = RegressionHead(hidden_dim=hidden_dim)

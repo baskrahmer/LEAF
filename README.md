@@ -4,7 +4,7 @@
 
 - [x] Data loading
     - [x] Ciqual data
-        - [x] Extract Co2e from data
+        - [x] Extract EF from data
     - [x] OpenFoodFacts data
         - [x] Filter data with known CIQUAL class
     - [x] Data loading/saving
@@ -31,10 +31,10 @@
 - [x] Experiments
     - [x] Grid search
     - [ ] Learnable alpha
-    - [ ] Pooling mechanisms
+    - [x] Pooling mechanisms
     - [x] Longer training runs
 - [x] Upload to HuggingFace
 - [ ] Streamlit demo
 - [x] Testing & reproducibility
-- [ ] Documentation
-- [ ] Writeup & submission
+- [x] Documentation
+- [x] Writeup & submission

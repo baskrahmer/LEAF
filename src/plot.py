@@ -70,7 +70,7 @@ def plot_ciqual_distribution(c: Config, save_path: str):
     # Adding labels and title
     plt.xlabel('Value')
     plt.ylabel('Frequency')
-    plt.title('Co2e distribution')
+    plt.title('EF distribution')
     bins = np.linspace(min(footprint_scores), max(footprint_scores), num_bins + 1)
     ticks = [(bins[i] + bins[i + 1]) / 2 for i in range(num_bins)]
     formatter = ticker.FormatStrFormatter('%.2f')

@@ -28,12 +28,12 @@ def train(c: Config, dataset: DatasetDict, base_model: Optional[PreTrainedModel]
         map_fn = lambda x: prepare_inputs_mlm(x, tokenizer, tokenizer_kwargs)
         collate_fn = get_mlm_collate_fn(tokenizer=tokenizer, mlm_probability=c.mlm_probability)
         class_to_idx = {}
-        idx_to_co2e = {}
+        idx_to_ef = {}
     else:
         class_to_idx = get_class_mapping(train_ds, val_ds)
-        class_to_co2e = get_ciqual_mapping(c)
-        idx_to_co2e = {idx: class_to_co2e[c] for c, idx in class_to_idx.items()}
-        map_fn = lambda x: prepare_inputs(x, tokenizer, tokenizer_kwargs, class_to_idx, class_to_co2e)
+        class_to_ef = get_ciqual_mapping(c)
+        idx_to_ef = {idx: class_to_ef[c] for c, idx in class_to_idx.items()}
+        map_fn = lambda x: prepare_inputs(x, tokenizer, tokenizer_kwargs, class_to_idx, class_to_ef)
         collate_fn = get_collate_fn(tokenizer)
     train_ds = train_ds.map(map_fn)
     val_ds = val_ds.map(map_fn)
@@ -48,7 +48,7 @@ def train(c: Config, dataset: DatasetDict, base_model: Optional[PreTrainedModel]
             base_model.load_state_dict(torch.load(c.mlm_model_path))
     else:
         base_model = LEAFModel(c, num_classes=len(class_to_idx.keys()), base_model=base_model,
-                               idx_to_co2e=idx_to_co2e)
+                               idx_to_ef=idx_to_ef)
     lightning_model = LightningWrapper(
         c,
         tokenizer,

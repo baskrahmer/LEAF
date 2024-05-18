@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Tuple, Any
+from typing import Tuple, Any, TextIO, List
 
 from tqdm import tqdm
 from transformers import PreTrainedTokenizerBase
@@ -15,7 +15,6 @@ def filter_data(c: Config, mlm: bool = False) -> str:
 
     filtered_products_filename = "products_filtered.jsonl" if not mlm else "products_mlm.jsonl"
     data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
-    ciqual_path = os.path.join(data_dir, c.ciqual_filename)
     products_path = os.path.join(data_dir, c.products_filename)
     output_path = os.path.join(data_dir, config_hash)
 
@@ -78,7 +77,8 @@ def filter_data(c: Config, mlm: bool = False) -> str:
     return filtered_products_path
 
 
-def extract_labelled_point(agb_set, ciqual_to_agb, columns, out_file, product, mlm) -> Tuple[bool, Any]:
+def extract_labelled_point(agb_set: set, ciqual_to_agb: dict[str, str], columns: List[str], out_file: TextIO,
+                           product: dict, mlm: bool) -> Tuple[bool, Any]:
     categories = product.pop("categories_properties")
     if categories.get("agribalyse_food_code:en") in agb_set:
         label = categories.get("agribalyse_food_code:en")
@@ -101,15 +101,16 @@ def prepare_inputs_mlm(sample: dict, tokenizer: PreTrainedTokenizerBase, tokeniz
     sample['input_ids'] = encodings.input_ids
     sample['attention_mask'] = encodings.attention_mask
 
-    # Fixes DataSet.map dropping the "lang" column for unknown reasons. This can probably also be os.sleep as a fix
+    # Fixes DataSet.map dropping the "lang" column for unknown reasons. This can probably also use os.sleep as a fix;
+    #  it just seems to need some time to process the data.
     if "lang" not in sample:
         raise ValueError
     return sample
 
 
 def prepare_inputs(sample: dict, tokenizer: PreTrainedTokenizerBase, tokenizer_kwargs: dict,
-                   class_to_idx: dict, class_to_co2e: dict) -> dict:
+                   class_to_idx: dict, class_to_ef: dict) -> dict:
     sample['encodings'] = tokenizer(sample.pop('product_name'), **tokenizer_kwargs)
-    sample['regressands'] = class_to_co2e[sample['label']]
+    sample['regressands'] = class_to_ef[sample['label']]
     sample['classes'] = class_to_idx[sample['label']]
     return sample
