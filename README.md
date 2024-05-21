@@ -1,6 +1,6 @@
 # LEAF: **L**inguistic **E**missions **A**nalysis of **F**ood products
 
-![LEAF_concept_whitebg](https://github.com/baskrahmer/LEAF/assets/24520725/63c88582-55f3-4b48-bb95-31be33a43ef3)
+![LEAF_concept_whitebg](diagram.svg)
 
 Predict tne environmental impact of food products in over 50 languages! Use a pretrained model, or train your own. Code
 accompanying the submission for ClimateNLP 2024 ACL workshop.

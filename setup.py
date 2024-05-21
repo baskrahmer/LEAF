@@ -19,7 +19,6 @@ EXTRAS_REQUIREMENTS = {
     "visualization": VISUALIZATION_REQUIREMENTS,
 }
 setup(
-    author="Bas Krahmer",
     python_requires=">=3.10",
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
@@ -39,7 +38,6 @@ setup(
     test_suite="tests",
     tests_require=TEST_REQUIREMENTS,
     extras_require=EXTRAS_REQUIREMENTS,
-    url="https://github.com/baskrahmer/LEAF",
     version="0.0.0",
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
