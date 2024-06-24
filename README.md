@@ -5,6 +5,20 @@
 Predict tne environmental impact of food products in over 50 languages! Use a pretrained model, or train your own. Code
 accompanying the submission for ClimateNLP 2024 ACL workshop.
 
+## Loading models from Hugging Face
+
+The models are available on the Hugging Face model hub:
+
+```python
+from transformers import AutoTokenizer, AutoModel
+
+tokenizer = AutoTokenizer.from_pretrained("baskra/leaf-large")
+model = AutoModel.from_pretrained("baskra/leaf-large", trust_remote_code=True)
+
+model(**tokenizer("Nutella", return_tensors="pt"))
+# {'logits': tensor([[-12.2842, ...]]), 'class_idx': tensor([1553]), 'ef_score': tensor([0.0129]), 'class': ['Chocolate spread with hazelnuts']}
+```
+
 ## Navigating the repository
 
 - `data/`: Contains sample data to run the tests with. The full data can be fetched by running `get_data.sh` in the root
@@ -24,41 +38,14 @@ pip install -e .[dev]
 
 The project is developed and tested with Python 3.10.
 
-## Features
+## Citation
 
-- [x] Data loading
-    - [x] Ciqual data
-        - [x] Extract EF from data
-    - [x] OpenFoodFacts data
-        - [x] Filter data with known CIQUAL class
-    - [x] Data loading/saving
-- [x] Exploratory data analysis
-    - [x] Product distribution across languages
-    - [x] Product distribution across classes
-    - [x] Environmental footprint score across classes
-- [x] Model definition
-    - [x] MLM on unlabelled data
-    - [x] Classification model
-    - [x] Regression model
-    - [x] Hybrid model
-    - [x] Baseline models
-        - [x] Cosine similarity with LCI name
-        - [x] Zero-shot autoregressive LLM
-- [x] Training pipeline
-- [x] Class imbalances
-    - [x] Train/test splits balanced by language and class
-- [x] Evaluation pipeline
-    - [x] Split across products
-    - [x] Split across languages
-    - [x] Classification metrics (accuracy, F1)
-    - [x] Regression metrics (MAE)
-- [x] Experiments
-    - [x] Grid search
-    - [ ] Learnable alpha
-    - [x] Pooling mechanisms
-    - [x] Longer training runs
-- [x] Upload to HuggingFace
-- [ ] Streamlit demo
-- [x] Testing & reproducibility
-- [x] Documentation
-- [x] Writeup & submission
+When using this model, please consider citing it as follows:
+
+**BibTeX:**
+
+[More Information Needed]
+
+**APA:**
+
+[More Information Needed]
