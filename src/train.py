@@ -91,7 +91,7 @@ def train(c: Config, dataset: DatasetDict, base_model: Optional[PreTrainedModel]
         model_filename = f"model{'_mlm' if mlm else ''}.pt"
         with open(os.path.join(run_dir, model_filename), "wb") as f:
             torch.save(base_model.state_dict(), f)
-        tokenizer.save_pretrained(c.save_path)
+        tokenizer.save_pretrained(run_dir)
 
     if c.push_to_hub and not mlm:
         base_model.push_to_hub(c.hub_repo_id)
