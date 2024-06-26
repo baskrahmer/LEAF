@@ -4,11 +4,11 @@
 
 from setuptools import setup, find_packages
 
-REQUIREMENTS = ["datasets", "transformers", "torch"]
+REQUIREMENTS = ["datasets~=2.18", "transformers~=4.41", "torch~=2.2", "numpy~=1.26"]
 
 TEST_REQUIREMENTS = ["pytest"]
 QUALITY_REQUIREMENTS = ["black", "ruff"]
-TRAINING_REQUIREMENTS = ["lightning", "wandb", "torchmetrics"]
+TRAINING_REQUIREMENTS = ["lightning~=2.2", "wandb~=0.16", "torchmetrics~=1.3"]
 VISUALIZATION_REQUIREMENTS = ["matplotlib", "seaborn"]
 OPENAI_REQUIREMENTS = ["openai", "tiktoken"]
 
